@@ -1,0 +1,56 @@
+[gd_scene load_steps=5 format=3 uid="uid://fduirfri0qau"]
+
+[ext_resource type="PackedScene" uid="uid://cevp72jtqlvv" path="res://UI/RedTowerPanel.tscn" id="1_02qro"]
+[ext_resource type="Script" path="res://UI/CanonTowerPanel.gd" id="2_7oxxw"]
+
+[sub_resource type="GDScript" id="GDScript_guu6k"]
+script/source = "extends Label
+
+
+func _process(delta):
+	self.text = \"Gold: \" + str(Game.gold)
+"
+
+[sub_resource type="GDScript" id="GDScript_usy2k"]
+script/source = "extends Label
+
+func _process(delta):
+	self.text = \"Health: \" + str(Game.health)
+"
+
+[node name="UserInterface" type="CanvasLayer"]
+
+[node name="Panel" type="Panel" parent="."]
+offset_left = 1856.0
+offset_right = 2368.0
+offset_bottom = 1344.0
+
+[node name="FlowContainer" type="FlowContainer" parent="Panel"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 64.0
+offset_right = 448.0
+offset_bottom = 1280.0
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+
+[node name="CanonTowerPanel" parent="Panel/FlowContainer" instance=ExtResource("1_02qro")]
+custom_minimum_size = Vector2(160, 160)
+layout_mode = 2
+script = ExtResource("2_7oxxw")
+
+[node name="Gold" type="Label" parent="."]
+offset_left = 64.0
+offset_top = 64.0
+offset_right = 704.0
+offset_bottom = 201.0
+theme_override_font_sizes/font_size = 100
+script = SubResource("GDScript_guu6k")
+
+[node name="Health" type="Label" parent="."]
+offset_left = 832.0
+offset_top = 64.0
+offset_right = 1472.0
+offset_bottom = 201.0
+theme_override_font_sizes/font_size = 100
+script = SubResource("GDScript_usy2k")

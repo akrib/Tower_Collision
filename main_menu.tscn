@@ -1,0 +1,67 @@
+[gd_scene load_steps=4 format=3 uid="uid://cf3dgcvtpsqha"]
+
+[ext_resource type="Texture2D" uid="uid://cydfm1prmh8il" path="res://assets/bg.png" id="1_cdqdr"]
+
+[sub_resource type="GDScript" id="GDScript_hm8xe"]
+script/source = "extends Button
+
+
+func _on_pressed():
+	get_tree().change_scene_to_file(\"res://maps/battlefield.tscn\")
+"
+
+[sub_resource type="GDScript" id="GDScript_pbrvx"]
+script/source = "extends Button
+
+
+func _on_pressed():
+	get_tree().quit()
+"
+
+[node name="MainMenu" type="Node2D"]
+
+[node name="Bg" type="Sprite2D" parent="."]
+position = Vector2(1180.5, 668.25)
+scale = Vector2(3.03708, 2.06336)
+texture = ExtResource("1_cdqdr")
+
+[node name="Panel" type="Panel" parent="."]
+offset_left = 128.0
+offset_top = 128.0
+offset_right = 2240.0
+offset_bottom = 1216.0
+
+[node name="Label" type="Label" parent="Panel"]
+layout_mode = 0
+offset_right = 2112.0
+offset_bottom = 448.0
+theme_override_font_sizes/font_size = 100
+text = "MAIN MENU"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel"]
+custom_minimum_size = Vector2(700, 400)
+layout_mode = 0
+offset_top = 512.0
+offset_right = 2112.0
+offset_bottom = 912.0
+theme_override_constants/separation = 400
+alignment = 1
+
+[node name="Play" type="Button" parent="Panel/HBoxContainer"]
+custom_minimum_size = Vector2(700, 400)
+layout_mode = 2
+theme_override_font_sizes/font_size = 100
+text = "Play"
+script = SubResource("GDScript_hm8xe")
+
+[node name="Quit" type="Button" parent="Panel/HBoxContainer"]
+custom_minimum_size = Vector2(700, 400)
+layout_mode = 2
+theme_override_font_sizes/font_size = 100
+text = "Quit"
+script = SubResource("GDScript_pbrvx")
+
+[connection signal="pressed" from="Panel/HBoxContainer/Play" to="Panel/HBoxContainer/Play" method="_on_pressed"]
+[connection signal="pressed" from="Panel/HBoxContainer/Quit" to="Panel/HBoxContainer/Quit" method="_on_pressed"]

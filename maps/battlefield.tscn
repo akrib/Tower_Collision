@@ -1,0 +1,42 @@
+[gd_scene load_steps=8 format=3 uid="uid://crk5j4s32gkyf"]
+
+[ext_resource type="PackedScene" uid="uid://q0f6vs8vnbxi" path="res://maps/player_island.tscn" id="1_21obd"]
+[ext_resource type="Script" path="res://maps/battlefield.gd" id="1_t86wi"]
+[ext_resource type="PackedScene" uid="uid://bycfateu3ol5n" path="res://maps/ennemi_island.tscn" id="2_ae62k"]
+[ext_resource type="Script" path="res://maps/player_island.gd" id="3_loluo"]
+[ext_resource type="Script" path="res://maps/ennemi_island.gd" id="5_x76fl"]
+
+[sub_resource type="Curve2D" id="Curve2D_p1l3t"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 192, 0, 0, 0, 0, 0, 256, 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 384, 0, 0, 0, 0, 0, 448, 0, 0, 0, 0, 0, 512, 0, 0, 0, 0, 0, 576, 0, 0, 0, 0, 0, 640, 0, 0, 0, 0, 0, 704, 0, 0, 0, 0, 0, 768, 0, 0, 0, 0, 0, 832, 0, 0, 0, 0, 0, 896, 0, 0, 0, 0, 0, 960, 0, 0, 0, 0, 0, 1024, 0, 0, 0, 0, 0, 1088, 0, 0, 0, 0, 0, 1152, 0, 0, 0, 0, 0, 1216, 0, 0, 0, 0, 0, 1280, 0, 0, 0, 0, 0, 1344, 0)
+}
+point_count = 22
+
+[sub_resource type="Curve2D" id="Curve2D_ybpgg"]
+_data = {
+"points": PackedVector2Array(0, 0, 0, 0, 1600, 576, 0, 0, 0, 0, 1536, 576, 0, 0, 0, 0, 1472, 576, 0, 0, 0, 0, 1408, 576, 0, 0, 0, 0, 1344, 576, 0, 0, 0, 0, 1280, 576, 0, 0, 0, 0, 1216, 576, 0, 0, 0, 0, 1152, 576, 0, 0, 0, 0, 1088, 576, 0, 0, 0, 0, 1024, 576, 0, 0, 0, 0, 960, 576, 0, 0, 0, 0, 896, 576, 0, 0, 0, 0, 832, 576, 0, 0, 0, 0, 768, 576, 0, 0, 0, 0, 704, 576, 0, 0, 0, 0, 640, 576, 0, 0, 0, 0, 576, 576, 0, 0, 0, 0, 512, 576, 0, 0, 0, 0, 448, 576, 0, 0, 0, 0, 384, 576, 0, 0, 0, 0, 320, 576, 0, 0, 0, 0, 256, 576)
+}
+point_count = 22
+
+[node name="Battlefield" type="Node2D"]
+script = ExtResource("1_t86wi")
+
+[node name="player_path" type="Path2D" parent="."]
+position = Vector2(256, 576)
+curve = SubResource("Curve2D_p1l3t")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="player_path"]
+
+[node name="Player_island" parent="player_path/PathFollow2D" instance=ExtResource("1_21obd")]
+script = ExtResource("3_loluo")
+
+[node name="ennemi_path" type="Path2D" parent="."]
+curve = SubResource("Curve2D_ybpgg")
+
+[node name="PathFollow2D" type="PathFollow2D" parent="ennemi_path"]
+position = Vector2(1600, 576)
+rotation = 3.14159
+
+[node name="ennemi_island" parent="ennemi_path/PathFollow2D" instance=ExtResource("2_ae62k")]
+position = Vector2(6.10352e-05, -3.05176e-05)
+script = ExtResource("5_x76fl")

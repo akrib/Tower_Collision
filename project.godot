@@ -1,0 +1,32 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Tower Collision"
+run/main_scene="res://main_menu.tscn"
+config/features=PackedStringArray("4.3", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Game="*res://Global/Game.gd"
+
+[display]
+
+window/size/viewport_width=2368
+window/size/viewport_height=1344
+window/size/window_width_override=1194
+window/size/window_height_override=682
+window/stretch/mode="viewport"
+
+[rendering]
+
+textures/light_projectors/filter=0
