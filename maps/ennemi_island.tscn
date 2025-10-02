@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bycfateu3ol5n"]
 
-[ext_resource type="Script" path="res://maps/ennemi_tile_holder.gd" id="1_8wmdr"]
+[ext_resource type="Script" uid="uid://cxibhj6nbxn0" path="res://maps/ennemi_tile_holder.gd" id="1_8wmdr"]
 
 [node name="ennemi_island" type="Node2D"]
 
