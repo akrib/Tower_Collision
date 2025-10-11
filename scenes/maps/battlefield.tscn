@@ -1,6 +1,7 @@
-[gd_scene load_steps=8 format=3 uid="uid://crk5j4s32gkyf"]
+[gd_scene load_steps=9 format=3 uid="uid://crk5j4s32gkyf"]
 
 [ext_resource type="Script" uid="uid://cgywdn3a5dmn2" path="res://scripts/maps/battlefield.gd" id="1_qq40l"]
+[ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/maps/water.tscn" id="2_2k4hr"]
 [ext_resource type="PackedScene" uid="uid://q0f6vs8vnbxi" path="res://scenes/maps/player_island.tscn" id="2_qs6ax"]
 [ext_resource type="Script" uid="uid://def1nn0pgwuj4" path="res://scripts/maps/player_island.gd" id="3_2k4hr"]
 [ext_resource type="PackedScene" uid="uid://bycfateu3ol5n" path="res://scenes/maps/enemy_island.tscn" id="4_28ap0"]
@@ -20,6 +21,9 @@ point_count = 22
 
 [node name="Battlefield" type="Node2D"]
 script = ExtResource("1_qq40l")
+
+[node name="Water" parent="." instance=ExtResource("2_2k4hr")]
+position = Vector2(1151.9999, 703.99994)
 
 [node name="player_path" type="Path2D" parent="."]
 position = Vector2(256, 576)

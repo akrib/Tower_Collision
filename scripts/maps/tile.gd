@@ -19,7 +19,7 @@ func death(area):
 func _on_area_entered(area):
 	#print(area)
 	var array_of_tiles = get_tree().get_nodes_in_group ( "tile" )
-	var array_of_ennemi = get_tree().get_nodes_in_group ( "ennemi" )
+	var array_of_ennemi = get_tree().get_nodes_in_group ( "enemy" )
 	var array_of_player = get_tree().get_nodes_in_group ( "player" )
 	#print(array_of_tiles)
 	#var currTargets = get_overlapping_areas()

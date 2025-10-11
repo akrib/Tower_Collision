@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcb7xqnact81r"]
+
+[ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/maps/water.tscn" id="1_qvcb1"]
+[ext_resource type="PackedScene" uid="uid://q0f6vs8vnbxi" path="res://scenes/maps/player_island.tscn" id="2_qvcb1"]
+
+[node name="WaitingRoom" type="Node2D"]
+
+[node name="Water" parent="." instance=ExtResource("1_qvcb1")]
+position = Vector2(1187, 669)
+
+[node name="Player_island" parent="." instance=ExtResource("2_qvcb1")]
+position = Vector2(800, 500)
