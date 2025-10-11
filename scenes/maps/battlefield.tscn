@@ -15,7 +15,7 @@ point_count = 22
 
 [sub_resource type="Curve2D" id="Curve2D_ybpgg"]
 _data = {
-"points": PackedVector2Array(0, 0, 0, 0, 1600, 576, 0, 0, 0, 0, 1536, 576, 0, 0, 0, 0, 1472, 576, 0, 0, 0, 0, 1408, 576, 0, 0, 0, 0, 1344, 576, 0, 0, 0, 0, 1280, 576, 0, 0, 0, 0, 1216, 576, 0, 0, 0, 0, 1152, 576, 0, 0, 0, 0, 1088, 576, 0, 0, 0, 0, 1024, 576, 0, 0, 0, 0, 960, 576, 0, 0, 0, 0, 896, 576, 0, 0, 0, 0, 832, 576, 0, 0, 0, 0, 768, 576, 0, 0, 0, 0, 704, 576, 0, 0, 0, 0, 640, 576, 0, 0, 0, 0, 576, 576, 0, 0, 0, 0, 512, 576, 0, 0, 0, 0, 448, 576, 0, 0, 0, 0, 384, 576, 0, 0, 0, 0, 320, 576, 0, 0, 0, 0, 256, 576)
+"points": PackedVector2Array(0, 0, 0, 0, 1600, 0, 0, 0, 0, 0, 1536, 0, 0, 0, 0, 0, 1472, 0, 0, 0, 0, 0, 1408, 0, 0, 0, 0, 0, 1344, 0, 0, 0, 0, 0, 1280, 0, 0, 0, 0, 0, 1216, 0, 0, 0, 0, 0, 1152, 0, 0, 0, 0, 0, 1088, 0, 0, 0, 0, 0, 1024, 0, 0, 0, 0, 0, 960, 0, 0, 0, 0, 0, 896, 0, 0, 0, 0, 0, 832, 0, 0, 0, 0, 0, 768, 0, 0, 0, 0, 0, 704, 0, 0, 0, 0, 0, 640, 0, 0, 0, 0, 0, 576, 0, 0, 0, 0, 0, 512, 0, 0, 0, 0, 0, 448, 0, 0, 0, 0, 0, 384, 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 256, 0)
 }
 point_count = 22
 
@@ -23,10 +23,10 @@ point_count = 22
 script = ExtResource("1_qq40l")
 
 [node name="Water" parent="." instance=ExtResource("2_2k4hr")]
-position = Vector2(1151.9999, 703.99994)
+position = Vector2(1152.0001, 704)
 
 [node name="player_path" type="Path2D" parent="."]
-position = Vector2(256, 576)
+position = Vector2(300, 600)
 curve = SubResource("Curve2D_p1l3t")
 
 [node name="PathFollow2D" type="PathFollow2D" parent="player_path"]
@@ -35,11 +35,12 @@ curve = SubResource("Curve2D_p1l3t")
 script = ExtResource("3_2k4hr")
 
 [node name="ennemi_path" type="Path2D" parent="."]
+position = Vector2(500, 600)
 curve = SubResource("Curve2D_ybpgg")
 
 [node name="PathFollow2D" type="PathFollow2D" parent="ennemi_path"]
-position = Vector2(1600, 576)
-rotation = 3.1415927
+position = Vector2(1600, 0)
+rotates = false
 
 [node name="ennemi_island" parent="ennemi_path/PathFollow2D" instance=ExtResource("4_28ap0")]
 position = Vector2(6.10352e-05, -3.05176e-05)
