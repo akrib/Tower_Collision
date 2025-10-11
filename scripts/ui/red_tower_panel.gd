@@ -1,6 +1,6 @@
 extends Panel
 
-@onready var tower = preload("res://towers/RedBulletTower.tscn")
+@onready var tower = preload("res://scenes/towers/red_bullet_tower.tscn")
 var currTile
 var cost = 10
 

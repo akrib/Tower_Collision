@@ -28,10 +28,10 @@ func _on_area_entered(area):
 		var currTargets = get_overlapping_areas()
 		for curr in currTargets: 
 			if curr in array_of_tiles and curr in array_of_ennemi:
-				if curr.health < 1:
+				if curr.health > 0:
 					curr.health -= 1
-				else:
-					death(curr)
+					if curr.health <= 0:
+						death(curr)
 			if area.health < 1:
 				death(area)
 				break

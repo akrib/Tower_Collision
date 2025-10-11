@@ -4,14 +4,14 @@ extends Node2D
 @onready var tower = preload("res://scenes/towers/red_bullet_tower.tscn")
 
 var island_tower_map = [
-	[0, 0, 0, 1, 0, 0, 0, 0],
-	[0, 0, 0, 0, 1, 0, 0, 0],
-	[0, 0, 0, 1, 0, 0, 0, 0],
-	[0, 0, 0, 0, 1, 0, 0, 0],
-	[0, 0, 0, 1, 0, 0, 0, 0],
-	[0, 0, 0, 0, 1, 0, 0, 0],
-	[0, 0, 0, 1, 0, 0, 0, 0],
-	[0, 0, 0, 0, 1, 0, 0, 0]
+	[1, 1, 1, 1, 1, 1, 1, 1],
+	[0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0, 0]
 ]
 var island_tile_map = []
 
@@ -34,7 +34,7 @@ func draw_tiles():
 				global_position.y + (y * 48) + 24
 			)
 			
-			new_tile.add_to_group("player")
+			new_tile.add_to_group("enemy")
 			new_tile.add_to_group("tile")
 
 
@@ -50,10 +50,10 @@ func draw_towers():
 				# Configuration de la tour
 				new_tower.scale /= 2
 				new_tower.global_position = tile_node.global_position
-				new_tower.team = 1  # Team.PLAYER (1 correspond à l'enum)
+				new_tower.team = 2  # Team.ENEMY (2 correspond à l'enum)
 				new_tower.z_index = 1000
 				
-				new_tower.add_to_group("player")
+				new_tower.add_to_group("enemy")
 				new_tower.add_to_group("tower")
 				
 				new_tower.get_node("Area").modulate = Color(1, 1, 1, 0.05)
