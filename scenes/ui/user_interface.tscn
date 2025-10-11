@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://fduirfri0qau"]
 
-[ext_resource type="PackedScene" uid="uid://cevp72jtqlvv" path="res://UI/RedTowerPanel.tscn" id="1_02qro"]
-[ext_resource type="Script" path="res://UI/CanonTowerPanel.gd" id="2_7oxxw"]
+[ext_resource type="PackedScene" uid="uid://cevp72jtqlvv" path="res://scenes/ui/RedTowerPanel.tscn" id="1_02qro"]
+[ext_resource type="Script" uid="uid://biimbvcj7ahig" path="res://scripts/ui/CanonTowerPanel.gd" id="2_7oxxw"]
 
 [sub_resource type="GDScript" id="GDScript_guu6k"]
 script/source = "extends Label

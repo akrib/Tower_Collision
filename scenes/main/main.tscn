@@ -1,13 +1,13 @@
 [gd_scene load_steps=4 format=3 uid="uid://cf3dgcvtpsqha"]
 
-[ext_resource type="Texture2D" uid="uid://cydfm1prmh8il" path="res://assets/bg.png" id="1_cdqdr"]
+[ext_resource type="Texture2D" uid="uid://cydfm1prmh8il" path="res://assets/bg.png" id="1_hyk8p"]
 
 [sub_resource type="GDScript" id="GDScript_hm8xe"]
 script/source = "extends Button
 
 
 func _on_pressed():
-	get_tree().change_scene_to_file(\"res://maps/battlefield.tscn\")
+	get_tree().change_scene_to_file(\"res://scenes/maps/battlefield.tscn\")
 "
 
 [sub_resource type="GDScript" id="GDScript_pbrvx"]
@@ -23,7 +23,7 @@ func _on_pressed():
 [node name="Bg" type="Sprite2D" parent="."]
 position = Vector2(1180.5, 668.25)
 scale = Vector2(3.03708, 2.06336)
-texture = ExtResource("1_cdqdr")
+texture = ExtResource("1_hyk8p")
 
 [node name="Panel" type="Panel" parent="."]
 offset_left = 128.0

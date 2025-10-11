@@ -1,14 +1,14 @@
 [gd_scene load_steps=4 format=3 uid="uid://b02cm4vtj8goe"]
 
-[ext_resource type="Texture2D" uid="uid://t2q2138dfsxw" path="res://assets/island_tile.png" id="1_a1i25"]
-[ext_resource type="Script" path="res://maps/tile.gd" id="2_664ux"]
+[ext_resource type="Script" uid="uid://dmu8d8hfp2u71" path="res://scripts/maps/tile.gd" id="1_jdae2"]
+[ext_resource type="Texture2D" uid="uid://t2q2138dfsxw" path="res://assets/island_tile.png" id="2_4l528"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_w0oye"]
 size = Vector2(63, 47)
 
 [node name="tile_area" type="Area2D"]
 process_mode = 3
-script = ExtResource("2_664ux")
+script = ExtResource("1_jdae2")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(0, 0.5)
@@ -18,7 +18,7 @@ shape = SubResource("RectangleShape2D_w0oye")
 light_mask = 7
 visibility_layer = 7
 position = Vector2(32, 24)
-texture = ExtResource("1_a1i25")
+texture = ExtResource("2_4l528")
 offset = Vector2(-32, -24)
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]

@@ -1,8 +1,8 @@
 [gd_scene load_steps=15 format=3 uid="uid://3u634kcc2kgi"]
 
-[ext_resource type="Script" path="res://towers/red_bullet_tower.gd" id="1_0c88o"]
+[ext_resource type="Script" uid="uid://dqvuxxqwfm24n" path="res://scripts/towers/red_bullet_tower.gd" id="1_0c88o"]
 [ext_resource type="Texture2D" uid="uid://c232dx2e37o48" path="res://assets/Default size/towerDefense_tile250.png" id="2_f7ga1"]
-[ext_resource type="Script" path="res://towers/progress_bar.gd" id="3_m3kc5"]
+[ext_resource type="Script" uid="uid://cdxbidhgh0v0e" path="res://scripts/towers/progress_bar.gd" id="3_m3kc5"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1vkjn"]
 size = Vector2(87, 86)
@@ -48,13 +48,13 @@ corner_radius_top_right = 15
 corner_radius_bottom_right = 15
 corner_radius_bottom_left = 15
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e2q5e"]
-bg_color = Color(0.177761, 0.475471, 0.937246, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kw71f"]
+bg_color = Color(0.0976035, 0.379191, 0.802802, 1)
 border_width_left = 15
 border_width_top = 15
 border_width_right = 15
 border_width_bottom = 15
-border_color = Color(0.34902, 0.788235, 0.878431, 1)
+border_color = Color(0.34902, 0.788235, 0.898039, 1)
 border_blend = true
 corner_radius_top_left = 15
 corner_radius_top_right = 15
@@ -74,13 +74,13 @@ corner_radius_top_right = 15
 corner_radius_bottom_right = 15
 corner_radius_bottom_left = 15
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kw71f"]
-bg_color = Color(0.0976035, 0.379191, 0.802802, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_e2q5e"]
+bg_color = Color(0.177761, 0.475471, 0.937246, 1)
 border_width_left = 15
 border_width_top = 15
 border_width_right = 15
 border_width_bottom = 15
-border_color = Color(0.34902, 0.788235, 0.898039, 1)
+border_color = Color(0.34902, 0.788235, 0.878431, 1)
 border_blend = true
 corner_radius_top_left = 15
 corner_radius_top_right = 15
@@ -156,9 +156,9 @@ theme_override_constants/separation = 68
 [node name="Range" type="Button" parent="Upgrade/UpgradePanel/HBoxContainer"]
 custom_minimum_size = Vector2(125, 125)
 layout_mode = 2
-theme_override_styles/hover = SubResource("StyleBoxFlat_e2q5e")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_gcj5t")
 theme_override_styles/normal = SubResource("StyleBoxFlat_kw71f")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_gcj5t")
+theme_override_styles/hover = SubResource("StyleBoxFlat_e2q5e")
 
 [node name="Label" type="Label" parent="Upgrade/UpgradePanel/HBoxContainer/Range"]
 layout_mode = 0
@@ -180,9 +180,9 @@ text = "Range"
 [node name="AttackSpeed" type="Button" parent="Upgrade/UpgradePanel/HBoxContainer"]
 custom_minimum_size = Vector2(125, 125)
 layout_mode = 2
-theme_override_styles/hover = SubResource("StyleBoxFlat_e2q5e")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_gcj5t")
 theme_override_styles/normal = SubResource("StyleBoxFlat_kw71f")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_gcj5t")
+theme_override_styles/hover = SubResource("StyleBoxFlat_e2q5e")
 
 [node name="Label" type="Label" parent="Upgrade/UpgradePanel/HBoxContainer/AttackSpeed"]
 layout_mode = 0
@@ -205,9 +205,9 @@ Speed"
 [node name="Power" type="Button" parent="Upgrade/UpgradePanel/HBoxContainer"]
 custom_minimum_size = Vector2(125, 125)
 layout_mode = 2
-theme_override_styles/hover = SubResource("StyleBoxFlat_e2q5e")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_gcj5t")
 theme_override_styles/normal = SubResource("StyleBoxFlat_kw71f")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_gcj5t")
+theme_override_styles/hover = SubResource("StyleBoxFlat_e2q5e")
 
 [node name="Label" type="Label" parent="Upgrade/UpgradePanel/HBoxContainer/Power"]
 layout_mode = 0

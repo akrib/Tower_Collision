@@ -1,8 +1,8 @@
 extends Node2D
 
 
-@onready var tile=preload("res://maps/tile.tscn")
-@onready var tower = preload("res://towers/RedBulletTower.tscn")
+@onready var tile=preload("res://scenes/maps/tile.tscn")
+@onready var tower = preload("res://scenes/towers/RedBulletTower.tscn")
 var island_tower_map =[[0,0,0,1,0,0,0,0],
 					   [0,0,0,0,1,0,0,0],
 					   [0,0,0,1,0,0,0,0],
