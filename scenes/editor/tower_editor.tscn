@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://bqw5x8m7n3tp4"]
 
 [ext_resource type="Script" uid="uid://btjon8c71okjw" path="res://scripts/editor/tower_editor.gd" id="1_editor"]
-[ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/maps/water.tscn" id="2_htlg0"]
+[ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_htlg0"]
 [ext_resource type="Texture2D" uid="uid://c232dx2e37o48" path="res://assets/Default size/towerDefense_tile250.png" id="2_tower_icon"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]

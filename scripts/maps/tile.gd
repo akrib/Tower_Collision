@@ -1,51 +1,44 @@
 extends Area2D
-var team = ""
+
+var team = ""  # "player" ou "enemy"
 var health = 3
+@onready var smoke_particles = preload("res://scenes/effects/smoke.tscn")  # à créer
 
-# Called when the node enters the scene tree for the first time.
-func _ready():
-	pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	if self.health < 1:
-		death(self)
-	pass
+	if health < 1:
+		death()
 
-func death(area):
-	area.queue_free()
+func death():
+	queue_free()
 
 func _on_area_entered(area):
-	#print(area)
-	var array_of_tiles = get_tree().get_nodes_in_group ( "tile" )
-	var array_of_ennemi = get_tree().get_nodes_in_group ( "enemy" )
-	var array_of_player = get_tree().get_nodes_in_group ( "player" )
-	#print(array_of_tiles)
-	#var currTargets = get_overlapping_areas()
-	
-	if area in array_of_tiles and area in array_of_player :
-		var currTargets = get_overlapping_areas()
-		for curr in currTargets: 
-			if curr in array_of_tiles and curr in array_of_ennemi:
-				if curr.health > 0:
-					curr.health -= 1
-					if curr.health <= 0:
-						death(curr)
-			if area.health < 1:
-				death(area)
-				break
-			else : 
-				area.health -= 1
-		#print("in area in array_of_tiles")
-		#var targets = get_node("Area2D").get_overlapping_areas()
-		##var tiles = get_node('tile_holder').get_children()
-		#var kill = []
-		#for tar in targets :
-			#print(tar.get_parent().team) 
-			#if tar.get_parent().team == "ennemi" :
-				#print(tar.get_parent().name)
-				#kill.append(tar.get_parent().name)
-		#for tar in targets : 
-			#if tar.get_parent().name in kill:
-				#tar.get_parent().queue_free()
+	# Vérifie que l'autre est une tuile
+	if not area.is_in_group("tile"):
+		return
+
+	# Collision entre équipes opposées
+	if team == 1 and area.is_in_group("enemy"):  
+		resolve_collision(area)
+	elif team == 2 and area.is_in_group("player"): 
+		resolve_collision(area)
+
+func resolve_collision(other):
+	# Réduction des PV
+	health -= 1
+	other.health -= 1
+
+	# Générer des particules de fumée
+	spawn_smoke(global_position)
+	spawn_smoke(other.global_position)
+
+	# Vérifier la mort
+	if health <= 0:
+		death()
+	if other.health <= 0:
+		other.death()
+
+func spawn_smoke(pos: Vector2):
+	var smoke = smoke_particles.instantiate()
+	get_tree().current_scene.add_child(smoke)
+	smoke.global_position = pos
+	smoke.emitting = true

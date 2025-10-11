@@ -1,9 +1,23 @@
-[gd_scene load_steps=2 format=3 uid="uid://bycfateu3ol5n"]
+[gd_scene load_steps=4 format=3 uid="uid://bycfateu3ol5n"]
 
 [ext_resource type="Script" uid="uid://b6a5o00ty1my5" path="res://scripts/maps/player_tile_holder.gd" id="1_k1be3"]
+[ext_resource type="PackedScene" uid="uid://dg5kur7x0v623" path="res://scenes/effects/smoke.tscn" id="2_35jch"]
+[ext_resource type="Texture2D" uid="uid://cggg14ouydls0" path="res://assets/dust.png" id="3_u5ju5"]
 
 [node name="ennemi_island" type="Node2D"]
 
 [node name="tile_holder" type="Node2D" parent="."]
 script = ExtResource("1_k1be3")
 team_id = 2
+
+[node name="smoke" parent="." instance=ExtResource("2_35jch")]
+emitting = false
+texture = ExtResource("3_u5ju5")
+one_shot = true
+preprocess = 1.0
+speed_scale = 0.6
+lifetime_randomness = 1.0
+emission_shape = 1
+emission_sphere_radius = 56.54
+spread = 75.57
+gravity = Vector2(0, -50)

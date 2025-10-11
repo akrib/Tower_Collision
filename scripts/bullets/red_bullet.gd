@@ -2,7 +2,7 @@ extends CharacterBody2D
 
 # Énumération pour les équipes (doit correspondre à celle de la tour)
 enum Team { NONE, PLAYER, ENEMY }
-
+@onready var impact_particles = preload("res://scenes/effects/explode.tscn")
 # Configuration de la balle
 @export var team: Team = Team.NONE
 @export var bullet_damage: int = 1
@@ -46,8 +46,15 @@ func _on_area_2d_area_entered(area):
 	# Déterminer si c'est une tuile ennemie
 	if is_enemy_tile(area):
 		area.health -= bullet_damage
+		spawn_explosion(global_position)
 		queue_free()
-
+		
+		
+func spawn_explosion(pos: Vector2):
+	var explosion = impact_particles.instantiate()
+	get_tree().current_scene.add_child(explosion)
+	explosion.global_position = pos
+	explosion.emitting = true
 
 func is_enemy_tower(tower) -> bool:
 	# Si on a pas de team, on ne touche rien

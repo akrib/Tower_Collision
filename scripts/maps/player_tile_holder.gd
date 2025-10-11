@@ -27,27 +27,11 @@ func create_iso_grid():
 			var iso_pos = Vector2((x - y) * TILE_WIDTH / 2, (x + y) * TILE_HEIGHT / 2)
 			new_tile.position = iso_pos
 			new_tile.name = "tile_%d_%d" % [x, y]
-
+			new_tile.team = team_id
 			new_tile.add_to_group(group_name)
 			new_tile.add_to_group("tile")
 
 			island_tile_map[x].append(new_tile)
-	#else:
-		#for x in range(GRID_SIZE - 1, -1, -1):  # boucle inversée sur X
-			#island_tile_map.append([])
-			#for y in range(GRID_SIZE):
-				#var new_tile = tile_scene.instantiate()
-				#add_child(new_tile)
-#
-				#var iso_pos = Vector2((x - y) * TILE_WIDTH / 2, (x + y) * TILE_HEIGHT / 2)
-				#new_tile.position = iso_pos
-				#new_tile.name = "tile_%d_%d" % [x, y]
-#
-				#new_tile.add_to_group(group_name)
-				#new_tile.add_to_group("tile")
-#
-				#island_tile_map[GRID_SIZE - 1 - x].append(new_tile)  # réindexation pour conserver [0][y] à gauche
-
 
 func draw_towers():
 	TowerDataManager.load_layout()
@@ -59,18 +43,18 @@ func draw_towers():
 				if island_tower_map[x][y] > 0:
 					create_tower(x, y, island_tower_map[x][y])
 	else:
-		for x in range(GRID_SIZE - 1, -1, -1):  # boucle inversée sur X
+		for x in range(GRID_SIZE):  # boucle inversée sur X
 			for y in range(GRID_SIZE):
 				if island_tower_map[x][y] > 0:
-					create_tower(x, y, island_tower_map[x][y])
+					create_tower(y,x, island_tower_map[x][y])
 
 
 func create_tower(x: int, y: int, tower_type: int):
 	var new_tower = tower_scene.instantiate()
 	var tile_node = island_tile_map[x][y]
-
+	
 	tile_node.add_child(new_tower)
-
+	#tile_node.modulate = Color(1, 1, 1, 0.05)
 	new_tower.scale = Vector2(0.5, 0.5)
 	new_tower.position = Vector2(0, -TILE_HEIGHT * 0.35)
 	new_tower.z_index = y * GRID_SIZE + x
@@ -85,6 +69,8 @@ func create_tower(x: int, y: int, tower_type: int):
 			new_tower.attack_range = 600
 
 	var group_name =  "player" if team_id == 1 else "enemy"
+	if group_name=="enemy":
+		new_tower.set_rotation_degrees(180)
 	new_tower.add_to_group(group_name)
 	new_tower.add_to_group("tower")
-	new_tower.get_node("Area").modulate = Color(1, 1, 1, 0.05)
+	new_tower.get_node("Area").modulate = Color(1, 1, 1, 0.0)
