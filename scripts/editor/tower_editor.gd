@@ -11,6 +11,8 @@ enum TowerType { NONE, RED_TOWER, BLUE_TOWER, GREEN_TOWER }
 var selected_tower_type = TowerType.NONE
 var tiles = []
 var tower_sprites = {}
+var dragging_tower = false
+var drag_preview = null
 
 # Préchargement des ressources
 var tile_scene = preload("res://scenes/maps/tile.tscn")
@@ -41,8 +43,9 @@ func create_grid():
 				tile_holder.global_position.y + (y * 48) + 24
 			)
 			
-			# Ajouter un signal de clic
-			new_tile.input_event.connect(_on_tile_clicked.bind(x, y))
+			# Activer l'input pour cette tuile
+			new_tile.input_pickable = true
+			new_tile.input_event.connect(_on_tile_input.bind(x, y))
 			
 			tiles[x].append(new_tile)
 
@@ -83,7 +86,7 @@ func remove_tower_visual(x: int, y: int):
 		tower_sprites.erase(key)
 
 
-func _on_tile_clicked(_viewport, event, _shape_idx, x: int, y: int):
+func _on_tile_input(_viewport, event, _shape_idx, x: int, y: int):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if selected_tower_type == TowerType.NONE:
 			# Mode suppression
@@ -95,6 +98,58 @@ func _on_tile_clicked(_viewport, event, _shape_idx, x: int, y: int):
 			place_tower_visual(x, y, selected_tower_type)
 		
 		update_tower_count()
+
+
+func _input(event):
+	if dragging_tower and drag_preview:
+		if event is InputEventMouseMotion:
+			# Déplacer la prévisualisation
+			drag_preview.global_position = get_global_mouse_position()
+			
+			# Trouver la tuile la plus proche
+			var closest_tile = get_closest_tile(get_global_mouse_position())
+			if closest_tile:
+				# Snap au centre de la tuile
+				highlight_tile(closest_tile)
+				drag_preview.global_position = closest_tile.global_position
+				
+		elif event is InputEventMouseButton and not event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			# Relâcher
+			var closest_tile = get_closest_tile(get_global_mouse_position())
+			if closest_tile:
+				var coords = get_tile_coords(closest_tile)
+				if coords:
+					TowerDataManager.set_tower(coords.x, coords.y, selected_tower_type)
+					place_tower_visual(coords.x, coords.y, selected_tower_type)
+					update_tower_count()
+			
+			# Nettoyer la prévisualisation
+			if drag_preview:
+				drag_preview.queue_free()
+				drag_preview = null
+			dragging_tower = false
+
+
+func get_closest_tile(pos: Vector2):
+	var min_dist = INF
+	var closest = null
+	
+	for row in tiles:
+		for tile in row:
+			var dist = tile.global_position.distance_to(pos)
+			if dist < min_dist and dist < 64:  # Rayon de snap
+				min_dist = dist
+				closest = tile
+	
+	return closest
+
+
+func get_tile_coords(tile_node):
+	for x in range(8):
+		for y in range(8):
+			if tiles[x][y] == tile_node:
+				return Vector2i(x, y)
+	return null
 
 
 func setup_ui():
@@ -115,7 +170,11 @@ func setup_ui():
 	ui.get_node("Panel/ConfirmDialog/HBox/NoBtn").pressed.connect(
 		func(): ui.get_node("Panel/ConfirmDialog").visible = false
 	)
-
+	ui.get_node("Panel/ButtonContainer/RedTowerBtn").pressed.connect(
+		func():
+			select_tower(TowerType.RED_TOWER)
+			start_drag_preview()
+	)
 
 func select_tower(tower_type: TowerType):
 	selected_tower_type = tower_type
@@ -183,3 +242,20 @@ func show_message(text: String):
 	var timer = get_tree().create_timer(2.0)
 	timer.timeout.connect(func(): message.visible = false)
 	
+func start_drag_preview():
+	if selected_tower_type == TowerType.NONE:
+		return
+	dragging_tower = true
+	drag_preview = Sprite2D.new()
+	drag_preview.texture = tower_textures.get(selected_tower_type)
+	drag_preview.scale = Vector2(1.5, 1.5)
+	drag_preview.modulate = Color(1, 1, 1, 0.5)  # semi-transparent
+	add_child(drag_preview)
+	drag_preview.global_position = get_global_mouse_position()
+	
+
+func highlight_tile(tile):
+	for row in tiles:
+		for t in row:
+			t.modulate = Color(1, 1, 1)
+	tile.modulate = Color(1, 1, 0.8)  # léger jaune
