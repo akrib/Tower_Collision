@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=3 uid="uid://dfgabw3k0un7i"]
 
 [ext_resource type="Texture2D" uid="uid://b0h31188nisne" path="res://assets/Default size/towerDefense_tile245.png" id="1_7t4n6"]
-[ext_resource type="Script" path="res://mobs/soldier_a.gd" id="1_w0naa"]
+[ext_resource type="Script" uid="uid://f0v6oiogpf0q" path="res://menage/mobs/soldier_a.gd" id="1_w0naa"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s0if6"]
 bg_color = Color(1, 0.243137, 0.2, 1)
