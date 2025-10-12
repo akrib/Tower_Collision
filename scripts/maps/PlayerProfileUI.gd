@@ -1,4 +1,5 @@
 extends CanvasLayer
+class_name PlayerProfileUI
 
 # Références aux nœuds UI
 @onready var player_name_label = $Panel/HBoxContainer/InfoContainer/PlayerName

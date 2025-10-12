@@ -4,7 +4,7 @@
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_2k4hr"]
 [ext_resource type="PackedScene" uid="uid://q0f6vs8vnbxi" path="res://scenes/maps/player_island.tscn" id="2_qs6ax"]
 [ext_resource type="Script" uid="uid://def1nn0pgwuj4" path="res://scripts/maps/player_island.gd" id="3_2k4hr"]
-[ext_resource type="PackedScene" path="res://scenes/maps/player_profile_ui.tscn" id="3_28ap0"]
+[ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="3_28ap0"]
 [ext_resource type="PackedScene" uid="uid://bycfateu3ol5n" path="res://scenes/maps/enemy_island.tscn" id="4_28ap0"]
 [ext_resource type="Script" uid="uid://dxqx7nhrg83ul" path="res://scripts/maps/enemy_island.gd" id="5_85qv2"]
 

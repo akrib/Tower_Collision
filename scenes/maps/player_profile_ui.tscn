@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://c5n8m7k4p3w2q"]
 
-[ext_resource type="Script" path="res://scripts/ui/player_profile.gd" id="1_profile"]
+[ext_resource type="Script" uid="uid://80ruldcn4sfi" path="res://scripts/maps/PlayerProfileUI.gd" id="1_profile"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
 bg_color = Color(0.1, 0.1, 0.15, 0.9)
@@ -139,7 +139,6 @@ text = "Expérience:"
 custom_minimum_size = Vector2(0, 30)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_xp_bg")
-max_value = 100.0
 show_percentage = false
 
 [node name="XPText" type="Label" parent="Panel/HBoxContainer/InfoContainer/XPContainer/XPProgressBar"]
