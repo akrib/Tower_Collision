@@ -1,20 +1,13 @@
-[gd_scene load_steps=7 format=3 uid="uid://cf3dgcvtpsqha"]
+[gd_scene load_steps=6 format=3 uid="uid://dabo3e0bkjghi"]
 
 [ext_resource type="Texture2D" uid="uid://cydfm1prmh8il" path="res://assets/bg.png" id="1_hyk8p"]
-[ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="2_iuonh"]
+[ext_resource type="PackedScene" path="res://scenes/maps/player_profile_ui.tscn" id="2_iuonh"]
 
 [sub_resource type="GDScript" id="GDScript_editor"]
 script/source = "extends Button
 
 func _on_pressed():
 	get_tree().change_scene_to_file(\"res://scenes/editor/tower_editor.tscn\")
-"
-
-[sub_resource type="GDScript" id="GDScript_skills"]
-script/source = "extends Button
-
-func _on_pressed():
-	get_tree().change_scene_to_file(\"res://scenes/main/skills_menu.tscn\")
 "
 
 [sub_resource type="GDScript" id="GDScript_hm8xe"]
@@ -39,6 +32,7 @@ scale = Vector2(3.03708, 2.06336)
 texture = ExtResource("1_hyk8p")
 
 [node name="PlayerProfileUI" parent="." instance=ExtResource("2_iuonh")]
+script = null
 
 [node name="Panel" type="Panel" parent="."]
 offset_left = 128.0
@@ -66,10 +60,10 @@ anchor_bottom = 0.5
 offset_left = -350.0
 offset_top = 50.0
 offset_right = 350.0
-offset_bottom = 550.0
+offset_bottom = 450.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 30
 alignment = 1
 
 [node name="Editor" type="Button" parent="Panel/VBoxContainer"]
@@ -78,13 +72,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 60
 text = "🏗️ Éditeur de Tours"
 script = SubResource("GDScript_editor")
-
-[node name="Skills" type="Button" parent="Panel/VBoxContainer"]
-custom_minimum_size = Vector2(700, 100)
-layout_mode = 2
-theme_override_font_sizes/font_size = 60
-text = "🎯 Compétences"
-script = SubResource("GDScript_skills")
 
 [node name="Play" type="Button" parent="Panel/VBoxContainer"]
 custom_minimum_size = Vector2(700, 100)
@@ -101,6 +88,5 @@ text = "❌ Quitter"
 script = SubResource("GDScript_pbrvx")
 
 [connection signal="pressed" from="Panel/VBoxContainer/Editor" to="Panel/VBoxContainer/Editor" method="_on_pressed"]
-[connection signal="pressed" from="Panel/VBoxContainer/Skills" to="Panel/VBoxContainer/Skills" method="_on_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/Play" to="Panel/VBoxContainer/Play" method="_on_pressed"]
 [connection signal="pressed" from="Panel/VBoxContainer/Quit" to="Panel/VBoxContainer/Quit" method="_on_pressed"]

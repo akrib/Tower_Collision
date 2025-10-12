@@ -14,26 +14,16 @@ var normal_xp_style: StyleBoxFlat
 # Style pour la barre XP niveau max
 var max_xp_style: StyleBoxFlat
 
-# Données du joueur (à connecter avec un système de sauvegarde plus tard)
-var player_data = {
-	"name": "Capitaine",
-	"level": 1,
-	"current_xp": 0,
-	"xp_to_next_level": 100,
-	"avatar_path": ""
-}
-
-
 func _ready():
 	# Créer les styles pour la barre XP
 	create_xp_styles()
 	
-	# Charger les données du joueur (pour l'instant depuis PlayerData si disponible)
-	load_player_data()
+	# Connecter les signaux de PlayerData
+	PlayerData.level_up.connect(_on_level_up)
+	PlayerData.xp_gained.connect(_on_xp_gained)
 	
 	# Mettre à jour l'affichage
 	update_ui()
-
 
 func create_xp_styles():
 	# Style normal (vert)
@@ -62,35 +52,17 @@ func create_xp_styles():
 	max_xp_style.corner_radius_bottom_right = 8
 	max_xp_style.corner_radius_bottom_left = 8
 
-
-func load_player_data():
-	# Charger depuis un fichier de sauvegarde (à implémenter plus tard)
-	# Pour l'instant, utiliser des valeurs par défaut
-	if FileAccess.file_exists("user://player_profile.save"):
-		var file = FileAccess.open("user://player_profile.save", FileAccess.READ)
-		if file:
-			var data = file.get_var()
-			if data:
-				player_data = data
-			file.close()
-
-
-func save_player_data():
-	var file = FileAccess.open("user://player_profile.save", FileAccess.WRITE)
-	if file:
-		file.store_var(player_data)
-		file.close()
-
-
 func update_ui():
+	var data = PlayerData.player_data
+	
 	# Mettre à jour le nom
-	player_name_label.text = player_data.name
+	player_name_label.text = data.name
 	
 	# Mettre à jour le niveau
-	level_value_label.text = str(player_data.level)
+	level_value_label.text = str(data.level)
 	
 	# Vérifier si niveau max
-	if player_data.level >= 99:
+	if data.level >= 99:
 		# Niveau max
 		xp_progress_bar.add_theme_stylebox_override("fill", max_xp_style)
 		xp_progress_bar.value = xp_progress_bar.max_value
@@ -100,19 +72,19 @@ func update_ui():
 	else:
 		# Niveau normal
 		xp_progress_bar.add_theme_stylebox_override("fill", normal_xp_style)
-		xp_progress_bar.max_value = player_data.xp_to_next_level
-		xp_progress_bar.value = player_data.current_xp
-		xp_text_label.text = "%d / %d" % [player_data.current_xp, player_data.xp_to_next_level]
+		xp_progress_bar.max_value = data.xp_to_next_level
+		xp_progress_bar.value = data.current_xp
+		xp_text_label.text = "%d / %d" % [data.current_xp, data.xp_to_next_level]
 		xp_text_label.add_theme_font_size_override("font_size", 14)
 		xp_text_label.add_theme_color_override("font_color", Color(1, 1, 1, 1))
 	
 	# Mettre à jour l'avatar
 	update_avatar()
 
-
 func update_avatar():
-	if player_data.avatar_path != "" and FileAccess.file_exists(player_data.avatar_path):
-		var image = Image.load_from_file(player_data.avatar_path)
+	var avatar_path = PlayerData.player_data.avatar_path
+	if avatar_path != "" and FileAccess.file_exists(avatar_path):
+		var image = Image.load_from_file(avatar_path)
 		if image:
 			var texture = ImageTexture.create_from_image(image)
 			avatar_texture.texture = texture
@@ -122,86 +94,34 @@ func update_avatar():
 	else:
 		show_default_avatar()
 
-
 func show_default_avatar():
 	avatar_texture.texture = null
 	default_avatar_label.visible = true
 
-
-# Fonction pour ajouter de l'XP
+# Fonction pour ajouter de l'XP (raccourci vers PlayerData)
 func add_xp(amount: int):
-	if player_data.level >= 99:
-		return  # Niveau max atteint
-	
-	player_data.current_xp += amount
-	
-	# Vérifier si on passe au niveau suivant
-	while player_data.current_xp >= player_data.xp_to_next_level and player_data.level < 99:
-		level_up()
-	
+	PlayerData.add_xp(amount)
+
+# Callbacks des signaux
+func _on_level_up(new_level: int):
 	update_ui()
-	save_player_data()
+	show_level_up_notification(new_level)
 
+func _on_xp_gained(_amount: int):
+	update_ui()
 
-func level_up():
-	player_data.current_xp -= player_data.xp_to_next_level
-	player_data.level += 1
-	
-	# Calculer l'XP nécessaire pour le prochain niveau (formule exponentielle)
-	player_data.xp_to_next_level = int(100 * pow(1.15, player_data.level - 1))
-	
-	# Animation de level up (à implémenter)
-	show_level_up_notification()
-
-
-func show_level_up_notification():
-	# Créer une notification visuelle de level up
-	print("LEVEL UP! Nouveau niveau: ", player_data.level)
-	# TODO: Ajouter une animation/particules/son
-
+func show_level_up_notification(new_level: int):
+	print("🎉 LEVEL UP! Nouveau niveau: %d" % new_level)
+	# TODO: Ajouter une animation/particules/son plus tard
 
 # Fonction pour changer le nom du joueur
 func set_player_name(new_name: String):
-	player_data.name = new_name
+	PlayerData.player_data.name = new_name
+	PlayerData.save_data()
 	update_ui()
-	save_player_data()
-
 
 # Fonction pour changer l'avatar
 func set_avatar(image_path: String):
-	player_data.avatar_path = image_path
+	PlayerData.player_data.avatar_path = image_path
+	PlayerData.save_data()
 	update_ui()
-	save_player_data()
-
-
-# Fonction pour charger une image depuis le système de fichiers
-func load_avatar_from_file():
-	# Cette fonction sera appelée par un bouton de sélection de fichier
-	# Pour l'instant, juste un placeholder
-	pass
-
-
-# Fonction pour réinitialiser le profil (debug)
-func reset_profile():
-	player_data = {
-		"name": "Capitaine",
-		"level": 1,
-		"current_xp": 0,
-		"xp_to_next_level": 100,
-		"avatar_path": ""
-	}
-	update_ui()
-	save_player_data()
-
-
-# Getters pour accéder aux données depuis d'autres scripts
-func get_level() -> int:
-	return player_data.level
-
-
-func get_xp() -> int:
-	return player_data.current_xp
-
-
-func get_player_name() -> String:
-	return player_data.name

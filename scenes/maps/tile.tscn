@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://b02cm4vtj8goe"]
+[gd_scene load_steps=4 format=3 uid="uid://b02cm4vtj8goe"]
 
 [ext_resource type="Script" uid="uid://dmu8d8hfp2u71" path="res://scripts/maps/tile.gd" id="1_jdae2"]
 [ext_resource type="Texture2D" uid="uid://cor7c3oqnimku" path="res://assets/texture/iso_tile.png" id="2_jdae2"]
+[ext_resource type="Script" uid="uid://bl1vguvs8gd83" path="res://scenes/maps/iso_depth_controller.gd" id="3_4l528"]
 
 [node name="tile_area" type="Area2D"]
 process_mode = 3
@@ -18,5 +19,6 @@ position = Vector2(67, 56)
 scale = Vector2(2, 2)
 texture = ExtResource("2_jdae2")
 offset = Vector2(-32, -24)
+script = ExtResource("3_4l528")
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]

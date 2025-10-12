@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://btjon8c71okjw" path="res://scripts/editor/tower_editor.gd" id="1_editor"]
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_htlg0"]
 [ext_resource type="Texture2D" uid="uid://c232dx2e37o48" path="res://assets/Default size/towerDefense_tile250.png" id="2_tower_icon"]
-[ext_resource type="PackedScene" path="res://scenes/maps/player_profile_ui.tscn" id="3_pusvh"]
+[ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="3_pusvh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
 bg_color = Color(0.2, 0.3, 0.4, 0.9)
@@ -51,9 +51,9 @@ position = Vector2(1303, 622)
 
 [node name="Panel" type="Panel" parent="UI"]
 offset_left = 50.0
-offset_top = 50.0
+offset_top = 193.0
 offset_right = 450.0
-offset_bottom = 1250.0
+offset_bottom = 1342.0
 
 [node name="Title" type="Label" parent="UI/Panel"]
 layout_mode = 0
@@ -80,7 +80,7 @@ layout_mode = 0
 offset_left = 50.0
 offset_top = 150.0
 offset_right = 350.0
-offset_bottom = 850.0
+offset_bottom = 687.0
 theme_override_constants/separation = 15
 
 [node name="Label" type="Label" parent="UI/Panel/ButtonContainer"]

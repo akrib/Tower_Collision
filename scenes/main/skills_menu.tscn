@@ -1,0 +1,292 @@
+[gd_scene load_steps=6 format=3 uid="uid://bvw8k5n3nap2q"]
+
+[ext_resource type="Script" uid="uid://cj1hli7spsyd" path="res://scripts/maps/skills_menu.gd" id="1_skills"]
+[ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_water"]
+[ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="3_profile"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.1, 0.15, 0.95)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.3, 0.5, 0.7, 1)
+corner_radius_top_left = 15
+corner_radius_top_right = 15
+corner_radius_bottom_right = 15
+corner_radius_bottom_left = 15
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skill_card"]
+bg_color = Color(0.15, 0.15, 0.2, 1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.4, 0.6, 0.8, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="SkillsMenu" type="Node2D"]
+script = ExtResource("1_skills")
+
+[node name="Water" parent="." instance=ExtResource("2_water")]
+position = Vector2(1184, 672)
+
+[node name="PlayerProfileUI" parent="." instance=ExtResource("3_profile")]
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="MainPanel" type="Panel" parent="UI"]
+offset_left = 256.0
+offset_top = 256.0
+offset_right = 2156.0
+offset_bottom = 1300.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/MainPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="Header" type="VBoxContainer" parent="UI/MainPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="UI/MainPanel/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "🎯 COMPÉTENCES"
+horizontal_alignment = 1
+
+[node name="SkillPoints" type="Label" parent="UI/MainPanel/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 32
+text = "Points de compétence disponibles: 0"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="UI/MainPanel/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Améliorez vos tours en dépensant des points de compétence gagnés en montant de niveau"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="UI/MainPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="SkillsContainer" type="HBoxContainer" parent="UI/MainPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="DamageSkill" type="Panel" parent="UI/MainPanel/VBoxContainer/SkillsContainer"]
+custom_minimum_size = Vector2(500, 700)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_card")
+
+[node name="VBox" type="VBoxContainer" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Icon" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "⚔️"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 32
+text = "PUISSANCE"
+horizontal_alignment = 1
+
+[node name="Level" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Niveau: 0 / 99"
+horizontal_alignment = 1
+
+[node name="Effect" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Bonus actuel: +0%"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 18
+text = "Augmente les dégâts de toutes vos tours de 5% par niveau"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="UpgradeBtn" type="Button" parent="UI/MainPanel/VBoxContainer/SkillsContainer/DamageSkill/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "⬆️ AMÉLIORER"
+
+[node name="AttackSpeedSkill" type="Panel" parent="UI/MainPanel/VBoxContainer/SkillsContainer"]
+custom_minimum_size = Vector2(500, 700)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_card")
+
+[node name="VBox" type="VBoxContainer" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Icon" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "⚡"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 32
+text = "CADENCE"
+horizontal_alignment = 1
+
+[node name="Level" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Niveau: 0 / 99"
+horizontal_alignment = 1
+
+[node name="Effect" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Bonus actuel: +0%"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 18
+text = "Augmente la vitesse d'attaque de toutes vos tours de 5% par niveau"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="UpgradeBtn" type="Button" parent="UI/MainPanel/VBoxContainer/SkillsContainer/AttackSpeedSkill/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "⬆️ AMÉLIORER"
+
+[node name="HealthSkill" type="Panel" parent="UI/MainPanel/VBoxContainer/SkillsContainer"]
+custom_minimum_size = Vector2(500, 700)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_skill_card")
+
+[node name="VBox" type="VBoxContainer" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="Icon" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 80
+text = "🛡️"
+horizontal_alignment = 1
+
+[node name="Name" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 32
+text = "RÉSISTANCE"
+horizontal_alignment = 1
+
+[node name="Level" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Niveau: 0 / 99"
+horizontal_alignment = 1
+
+[node name="Effect" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Bonus actuel: +0 HP"
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 18
+text = "Augmente les points de vie de toutes vos tours de 10 HP par niveau"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="UpgradeBtn" type="Button" parent="UI/MainPanel/VBoxContainer/SkillsContainer/HealthSkill/VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "⬆️ AMÉLIORER"
+
+[node name="HSeparator2" type="HSeparator" parent="UI/MainPanel/VBoxContainer"]
+layout_mode = 2
+
+[node name="BottomButtons" type="HBoxContainer" parent="UI/MainPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 30
+alignment = 1
+
+[node name="MenuBtn" type="Button" parent="UI/MainPanel/VBoxContainer/BottomButtons"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "◀ Menu Principal"
+
+[node name="EditorBtn" type="Button" parent="UI/MainPanel/VBoxContainer/BottomButtons"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "🏗️ Éditeur"
+
+[node name="BattleBtn" type="Button" parent="UI/MainPanel/VBoxContainer/BottomButtons"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "⚔️ Bataille!"

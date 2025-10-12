@@ -4,6 +4,7 @@ enum TowerType { NONE, RED_TOWER, BLUE_TOWER, GREEN_TOWER }
 
 @onready var tile_holder = $TileHolder
 @onready var ui = $UI
+@onready var message = $MessageLabel
 
 var selected_tower_type = TowerType.NONE
 var tiles = []
