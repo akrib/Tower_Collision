@@ -1,0 +1,221 @@
+[gd_scene load_steps=7 format=3 uid="uid://combat_raft_scene"]
+
+[ext_resource type="Script" path="res://scripts/junk_raft.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/raft_sprite.png" id="2"]
+
+[sub_resource type="StyleBoxFlat" id="fuel_bg"]
+bg_color = Color(0.2, 0.2, 0.2, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.4, 0.4, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="fuel_fill"]
+bg_color = Color(0.2, 0.8, 1, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="speed_bg"]
+bg_color = Color(0.2, 0.2, 0.2, 0.8)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.4, 0.4, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="speed_fill"]
+bg_color = Color(1, 0.5, 0.2, 1)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="JunkRaft" type="Node2D"]
+script = ExtResource("1")
+base_speed = 50.0
+max_speed = 250.0
+min_speed = -50.0
+acceleration_rate = 500.0
+deceleration_rate = 200.0
+fuel_cost_per_swipe = 20.0
+fuel_recharge_rate = 5.0
+
+[node name="Sprite" type="Sprite2D" parent="."]
+scale = Vector2(2, 2)
+texture = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionPolygon2D" parent="."]
+polygon = PackedVector2Array(-64, -32, 64, -32, 64, 32, -64, 32)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Control" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="FuelBar" type="ProgressBar" parent="UI/Control"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 80.0
+theme_override_styles/background = SubResource("fuel_bg")
+theme_override_styles/fill = SubResource("fuel_fill")
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="UI/Control/FuelBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -50.0
+offset_top = -12.0
+offset_right = 50.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "⛽ Carburant"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpeedBar" type="ProgressBar" parent="UI/Control"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 100.0
+offset_right = 350.0
+offset_bottom = 130.0
+theme_override_styles/background = SubResource("speed_bg")
+theme_override_styles/fill = SubResource("speed_fill")
+max_value = 100.0
+value = 50.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="UI/Control/SpeedBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -50.0
+offset_top = -12.0
+offset_right = 50.0
+offset_bottom = 12.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 20
+text = "🚀 Vitesse"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpeedLabel" type="Label" parent="UI/Control"]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 140.0
+offset_right = 350.0
+offset_bottom = 170.0
+theme_override_font_sizes/font_size = 18
+text = "Vitesse: 50.0 m/s"
+
+[node name="SwipeIndicator" type="Panel" parent="UI/Control"]
+visible = false
+layout_mode = 0
+offset_left = 400.0
+offset_top = 300.0
+offset_right = 800.0
+offset_bottom = 400.0
+
+[node name="Label" type="Label" parent="UI/Control/SwipeIndicator"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -25.0
+offset_right = 150.0
+offset_bottom = 25.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 32
+text = "← Swipe →"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Instructions" type="Label" parent="UI/Control"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -100.0
+offset_right = 300.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_font_sizes/font_size = 24
+text = "Swipe → pour accélérer
+Swipe ← pour freiner"
+horizontal_alignment = 1
+
+[node name="Particles" type="Node2D" parent="."]
+
+[node name="BoostParticles" type="CPUParticles2D" parent="Particles"]
+position = Vector2(-60, 0)
+emitting = false
+amount = 20
+lifetime = 0.5
+one_shot = true
+explosiveness = 0.8
+direction = Vector2(-1, 0)
+spread = 20.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 100.0
+initial_velocity_max = 200.0
+scale_amount_min = 2.0
+scale_amount_max = 4.0
+color = Color(0.2, 0.8, 1, 1)
+
+[node name="BrakeParticles" type="CPUParticles2D" parent="Particles"]
+position = Vector2(60, 0)
+emitting = false
+amount = 15
+lifetime = 0.4
+one_shot = true
+explosiveness = 0.7
+direction = Vector2(1, 0)
+spread = 15.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 80.0
+initial_velocity_max = 150.0
+scale_amount_min = 1.5
+scale_amount_max = 3.0
+color = Color(1, 0.8, 0.2, 1)
+
+[connection signal="speed_changed" from="." to="." method="_on_speed_changed"]
+[connection signal="fuel_changed" from="." to="." method="_on_fuel_changed"]
+[connection signal="swipe_performed" from="." to="." method="_on_swipe_performed"]
+[connection signal="out_of_fuel" from="." to="." method="_on_out_of_fuel"]
