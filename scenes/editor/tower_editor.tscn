@@ -1,8 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://bqw5x8m7n3tp4"]
+[gd_scene load_steps=7 format=3 uid="uid://bqw5x8m7n3tp4"]
 
 [ext_resource type="Script" uid="uid://btjon8c71okjw" path="res://scripts/editor/tower_editor.gd" id="1_editor"]
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_htlg0"]
 [ext_resource type="Texture2D" uid="uid://c232dx2e37o48" path="res://assets/Default size/towerDefense_tile250.png" id="2_tower_icon"]
+[ext_resource type="PackedScene" path="res://scenes/maps/player_profile_ui.tscn" id="3_pusvh"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
 bg_color = Color(0.2, 0.3, 0.4, 0.9)
@@ -33,6 +34,9 @@ script = ExtResource("1_editor")
 
 [node name="Water" parent="." instance=ExtResource("2_htlg0")]
 position = Vector2(1152.9999, 665.99994)
+
+[node name="PlayerProfileUI" parent="." instance=ExtResource("3_pusvh")]
+script = null
 
 [node name="ColorRect" type="ColorRect" parent="."]
 visible = false

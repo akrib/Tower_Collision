@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://cf3dgcvtpsqha"]
+[gd_scene load_steps=6 format=3 uid="uid://cf3dgcvtpsqha"]
 
 [ext_resource type="Texture2D" uid="uid://cydfm1prmh8il" path="res://assets/bg.png" id="1_hyk8p"]
+[ext_resource type="PackedScene" path="res://scenes/maps/player_profile_ui.tscn" id="2_iuonh"]
 
 [sub_resource type="GDScript" id="GDScript_editor"]
 script/source = "extends Button
@@ -29,6 +30,9 @@ func _on_pressed():
 position = Vector2(1180.5, 668.25)
 scale = Vector2(3.03708, 2.06336)
 texture = ExtResource("1_hyk8p")
+
+[node name="PlayerProfileUI" parent="." instance=ExtResource("2_iuonh")]
+script = null
 
 [node name="Panel" type="Panel" parent="."]
 offset_left = 128.0

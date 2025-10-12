@@ -1,0 +1,162 @@
+[gd_scene load_steps=4 format=3 uid="uid://c5n8m7k4p3w2q"]
+
+[ext_resource type="Script" path="res://scripts/ui/player_profile.gd" id="1_profile"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.1, 0.1, 0.15, 0.9)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.3, 0.5, 0.7, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xp_bg"]
+bg_color = Color(0.2, 0.2, 0.25, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.4, 0.5, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="PlayerProfileUI" type="CanvasLayer"]
+layer = 100
+script = ExtResource("1_profile")
+
+[node name="Panel" type="Panel" parent="."]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 420.0
+offset_bottom = 170.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="AvatarContainer" type="VBoxContainer" parent="Panel/HBoxContainer"]
+custom_minimum_size = Vector2(120, 130)
+layout_mode = 2
+
+[node name="AvatarPanel" type="Panel" parent="Panel/HBoxContainer/AvatarContainer"]
+custom_minimum_size = Vector2(120, 120)
+layout_mode = 2
+
+[node name="AvatarRect" type="ColorRect" parent="Panel/HBoxContainer/AvatarContainer/AvatarPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 5.0
+offset_top = 5.0
+offset_right = -5.0
+offset_bottom = -5.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.3, 0.4, 0.6, 1)
+
+[node name="AvatarTexture" type="TextureRect" parent="Panel/HBoxContainer/AvatarContainer/AvatarPanel/AvatarRect"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DefaultLabel" type="Label" parent="Panel/HBoxContainer/AvatarContainer/AvatarPanel/AvatarRect"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 48
+text = "👤"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="InfoContainer" type="VBoxContainer" parent="Panel/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="PlayerName" type="Label" parent="Panel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Joueur"
+uppercase = true
+
+[node name="LevelContainer" type="HBoxContainer" parent="Panel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="LevelLabel" type="Label" parent="Panel/HBoxContainer/InfoContainer/LevelContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "Niveau:"
+
+[node name="LevelValue" type="Label" parent="Panel/HBoxContainer/InfoContainer/LevelContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 24
+text = "1"
+
+[node name="XPContainer" type="VBoxContainer" parent="Panel/HBoxContainer/InfoContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="XPLabel" type="Label" parent="Panel/HBoxContainer/InfoContainer/XPContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Expérience:"
+
+[node name="XPProgressBar" type="ProgressBar" parent="Panel/HBoxContainer/InfoContainer/XPContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_xp_bg")
+max_value = 100.0
+show_percentage = false
+
+[node name="XPText" type="Label" parent="Panel/HBoxContainer/InfoContainer/XPContainer/XPProgressBar"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -50.0
+offset_top = -11.5
+offset_right = 50.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "0 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
