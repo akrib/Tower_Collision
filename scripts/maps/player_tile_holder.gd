@@ -96,29 +96,33 @@ func setup_tile_shader(tile: Area2D, row: int):
 	# Trouver le sprite de la tuile
 	var tile_sprite = tile.get_node_or_null("tile")
 	if not tile_sprite or not tile_sprite is Sprite2D:
+		print("  ⚠️ Sprite 'tile' non trouvé dans ", tile.name)
 		return
 	
-	# Vérifier si le shader est déjà appliqué
+	# DÉSACTIVER le script IsoDepthController pour éviter les conflits
+	if tile_sprite.get_script():
+		tile_sprite.set_script(null)
+	
+	# Créer ou récupérer le matériau shader
+	var shader_mat: ShaderMaterial
 	if tile_sprite.material and tile_sprite.material is ShaderMaterial:
-		# Le shader existe, juste mettre à jour le depth_factor
-		var shader_mat = tile_sprite.material as ShaderMaterial
-		
-		# Calculer la profondeur selon la ligne (0 = loin, 7 = près)
-		var depth = float(row) / float(GRID_SIZE - 1)
-		shader_mat.set_shader_parameter("depth_factor", depth)
+		shader_mat = tile_sprite.material as ShaderMaterial
 	else:
-		# Créer le matériau shader manuellement
-		var shader_mat = ShaderMaterial.new()
+		shader_mat = ShaderMaterial.new()
 		var shader = load("res://shaders/iso_depth_effect.gdshader")
+		if not shader:
+			push_error("❌ Shader iso_depth_effect.gdshader introuvable!")
+			return
 		shader_mat.shader = shader
-		
-		# Calculer la profondeur selon la ligne
-		var depth = float(row) / float(GRID_SIZE - 1)
-		shader_mat.set_shader_parameter("depth_factor", depth)
-		
-		# Appliquer le matériau
 		tile_sprite.material = shader_mat
 	
+	# Calculer le depth_factor selon la LIGNE (row)
+	# row 0 (premier rang) = loin = depth 0.0
+	# row 7 (dernier rang) = près = depth 1.0
+	var depth = float(row) / float(GRID_SIZE - 1)
+	shader_mat.set_shader_parameter("depth_factor", depth)
+	
+	print("  🎨 Shader appliqué à %s (row %d, depth: %.2f)" % [tile.name, row, depth])
 
 # ============================================================================
 # CHARGEMENT DES TOURS DEPUIS LA SAUVEGARDE
