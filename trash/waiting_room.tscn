@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://bkvhobl54ocn"]
+[gd_scene load_steps=3 format=3 uid="uid://bcb7xqnact81r"]
 
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="1_qvcb1"]
-[ext_resource type="PackedScene" uid="uid://b5deayjaqhvxf" path="res://scenes/maps/player_island.tscn" id="2_qvcb1"]
+[ext_resource type="PackedScene" uid="uid://q0f6vs8vnbxi" path="res://scenes/maps/player_island.tscn" id="2_qvcb1"]
 
 [node name="WaitingRoom" type="Node2D"]
 

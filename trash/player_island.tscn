@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://b5deayjaqhvxf"]
+[gd_scene load_steps=2 format=3 uid="uid://q0f6vs8vnbxi"]
 
 [ext_resource type="Script" uid="uid://b6a5o00ty1my5" path="res://scripts/maps/player_tile_holder.gd" id="1_1s1y4"]
 
