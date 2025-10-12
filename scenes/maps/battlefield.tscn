@@ -1,11 +1,10 @@
-[gd_scene load_steps=10 format=3 uid="uid://crk5j4s32gkyf"]
+[gd_scene load_steps=9 format=3 uid="uid://crk5j4s32gkyf"]
 
 [ext_resource type="Script" uid="uid://cgywdn3a5dmn2" path="res://scripts/maps/battlefield.gd" id="1_qq40l"]
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_2k4hr"]
-[ext_resource type="PackedScene" uid="uid://b5deayjaqhvxf" path="res://scenes/maps/player_island.tscn" id="2_qs6ax"]
-[ext_resource type="Script" path="res://scripts/maps/player_island.gd" id="3_2k4hr"]
 [ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="3_28ap0"]
 [ext_resource type="PackedScene" uid="uid://b13gvfirijxwj" path="res://scenes/maps/enemy_island.tscn" id="4_28ap0"]
+[ext_resource type="PackedScene" path="res://scenes/maps/junk_raft.tscn" id="4_85qv2"]
 [ext_resource type="Script" path="res://scripts/maps/enemy_island.gd" id="5_85qv2"]
 
 [sub_resource type="Curve2D" id="Curve2D_p1l3t"]
@@ -36,8 +35,7 @@ curve = SubResource("Curve2D_p1l3t")
 [node name="PathFollow2D" type="PathFollow2D" parent="player_path"]
 loop = false
 
-[node name="Player_island" parent="player_path/PathFollow2D" instance=ExtResource("2_qs6ax")]
-script = ExtResource("3_2k4hr")
+[node name="JunkRaft" parent="player_path/PathFollow2D" instance=ExtResource("4_85qv2")]
 
 [node name="ennemi_path" type="Path2D" parent="."]
 position = Vector2(500, 600)

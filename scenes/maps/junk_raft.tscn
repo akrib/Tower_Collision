@@ -1,7 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://combat_raft_scene"]
+[gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://scripts/junk_raft.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/raft_sprite.png" id="2"]
+[ext_resource type="Script" uid="uid://ddcbellaxn3l4" path="res://scripts/maps/junk_raft.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://cor7c3oqnimku" path="res://assets/texture/iso_tile.png" id="2"]
+
 
 [sub_resource type="StyleBoxFlat" id="fuel_bg"]
 bg_color = Color(0.2, 0.2, 0.2, 0.8)
