@@ -121,7 +121,8 @@ func setup_tile_shader(tile: Area2D, row: int):
 	# row 7 (dernier rang) = près = depth 1.0
 	var depth = float(row) / float(GRID_SIZE - 1)
 	shader_mat.set_shader_parameter("depth_factor", depth)
-	
+	shader_mat.set_shader_parameter("brightness_range", 0.6)  # Plus fort
+	shader_mat.set_shader_parameter("contrast_strength", 0.3)  # Plus de contraste
 	print("  🎨 Shader appliqué à %s (row %d, depth: %.2f)" % [tile.name, row, depth])
 
 # ============================================================================

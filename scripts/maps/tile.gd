@@ -15,12 +15,7 @@ func _ready():
 	# Ajouter le système d'effets de statut
 	status_effects = StatusEffects.new()
 	add_child(status_effects)
-	
-	var tile_sprite = get_node_or_null("tile")
-	if tile_sprite and tile_sprite is IsoDepthSprite:
-		tile_sprite.far_y = 200.0
-		tile_sprite.near_y = 1000.0
-		tile_sprite.update_depth()
+
 
 func _process(_delta):
 	if health < 1:

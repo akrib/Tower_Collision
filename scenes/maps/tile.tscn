@@ -1,9 +1,8 @@
-[gd_scene load_steps=6 format=3 uid="uid://b02cm4vtj8goe"]
+[gd_scene load_steps=5 format=3 uid="uid://b02cm4vtj8goe"]
 
 [ext_resource type="Script" uid="uid://dmu8d8hfp2u71" path="res://scripts/maps/tile.gd" id="1_jdae2"]
 [ext_resource type="Shader" uid="uid://b24yq4qhjud5h" path="res://shaders/iso_depth_effect.gdshader" id="2_j2wiq"]
 [ext_resource type="Texture2D" uid="uid://cor7c3oqnimku" path="res://assets/texture/iso_tile.png" id="2_jdae2"]
-[ext_resource type="Script" uid="uid://cofme34qb0afa" path="res://scripts/maps/iso_depth_controller.gd" id="3_4l528"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1fp51"]
 shader = ExtResource("2_j2wiq")
@@ -35,6 +34,5 @@ position = Vector2(67, 56)
 scale = Vector2(2, 2)
 texture = ExtResource("2_jdae2")
 offset = Vector2(-32, -24)
-
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]
