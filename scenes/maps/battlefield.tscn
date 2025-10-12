@@ -1,11 +1,10 @@
-[gd_scene load_steps=9 format=3 uid="uid://crk5j4s32gkyf"]
+[gd_scene load_steps=6 format=3 uid="uid://crk5j4s32gkyf"]
 
-[ext_resource type="Script" uid="uid://cgywdn3a5dmn2" path="res://scripts/maps/battlefield.gd" id="1_qq40l"]
+[ext_resource type="Script" path="res://scripts/maps/battlefield.gd" id="1_qq40l"]
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_2k4hr"]
 [ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="3_28ap0"]
-[ext_resource type="PackedScene" uid="uid://b13gvfirijxwj" path="res://scenes/maps/enemy_island.tscn" id="4_28ap0"]
-[ext_resource type="PackedScene" path="res://scenes/maps/junk_raft.tscn" id="4_85qv2"]
-[ext_resource type="Script" path="res://scripts/maps/enemy_island.gd" id="5_85qv2"]
+[ext_resource type="PackedScene" uid="uid://b5deayjaqhvxf" path="res://scenes/maps/player_island.tscn" id="4_player"]
+[ext_resource type="PackedScene" uid="uid://b13gvfirijxwj" path="res://scenes/maps/enemy_island.tscn" id="5_enemy"]
 
 [sub_resource type="Curve2D" id="Curve2D_p1l3t"]
 _data = {
@@ -26,7 +25,6 @@ script = ExtResource("1_qq40l")
 position = Vector2(1152.0001, 704)
 
 [node name="PlayerProfileUI" parent="." instance=ExtResource("3_28ap0")]
-script = null
 
 [node name="player_path" type="Path2D" parent="."]
 position = Vector2(300, 600)
@@ -35,7 +33,7 @@ curve = SubResource("Curve2D_p1l3t")
 [node name="PathFollow2D" type="PathFollow2D" parent="player_path"]
 loop = false
 
-[node name="JunkRaft" parent="player_path/PathFollow2D" instance=ExtResource("4_85qv2")]
+[node name="Player_island" parent="player_path/PathFollow2D" instance=ExtResource("4_player")]
 
 [node name="ennemi_path" type="Path2D" parent="."]
 position = Vector2(500, 600)
@@ -46,9 +44,8 @@ position = Vector2(1600, 0)
 rotates = false
 loop = false
 
-[node name="ennemi_island" parent="ennemi_path/PathFollow2D" instance=ExtResource("4_28ap0")]
+[node name="ennemi_island" parent="ennemi_path/PathFollow2D" instance=ExtResource("5_enemy")]
 position = Vector2(6.10352e-05, -3.05176e-05)
-script = ExtResource("5_85qv2")
 
 [node name="UI" type="Control" parent="."]
 visible = false
