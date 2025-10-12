@@ -1,9 +1,8 @@
 [gd_scene load_steps=2 format=3 uid="uid://b5deayjaqhvxf"]
 
-[ext_resource type="Script" path="res://scripts/maps/player_tile_holder.gd" id="1_1s1y4"]
+[ext_resource type="Script" uid="uid://b6a5o00ty1my5" path="res://scripts/maps/player_tile_holder.gd" id="1_1s1y4"]
 
 [node name="Player_island" type="Node2D"]
 
 [node name="tile_holder" type="Node2D" parent="."]
 script = ExtResource("1_1s1y4")
-team_id = 1

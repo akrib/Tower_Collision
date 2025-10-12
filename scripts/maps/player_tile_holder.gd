@@ -35,6 +35,33 @@ func _ready():
 # CONSTRUCTION DE LA GRILLE 8×8
 # ============================================================================
 
+#func create_iso_grid():
+	#"""Crée la grille isométrique de 8×8 tuiles"""
+	#var group_name = "player" if team_id == 1 else "enemy"
+	#
+	#for x in range(GRID_SIZE):
+		#island_tile_map.append([])
+		#for y in range(GRID_SIZE):
+			## Créer une nouvelle tuile
+			#var new_tile = tile_scene.instantiate()
+			#add_child(new_tile)
+#
+			## Position isométrique
+			#var iso_pos = Vector2((x - y) * TILE_WIDTH / 2, (x + y) * TILE_HEIGHT / 2)
+			#new_tile.position = iso_pos
+			#new_tile.name = "tile_%d_%d" % [x, y]
+			#
+			## Configuration de la tuile
+			#new_tile.team = team_id
+			#new_tile.add_to_group(group_name)
+			#new_tile.add_to_group("tile")
+#
+			## Stocker dans la grille
+			#island_tile_map[x].append(new_tile)
+	#
+	#print("  ✅ Grille %d×%d créée (%s)" % [GRID_SIZE, GRID_SIZE, group_name])
+	
+	
 func create_iso_grid():
 	"""Crée la grille isométrique de 8×8 tuiles"""
 	var group_name = "player" if team_id == 1 else "enemy"
@@ -55,11 +82,43 @@ func create_iso_grid():
 			new_tile.team = team_id
 			new_tile.add_to_group(group_name)
 			new_tile.add_to_group("tile")
+			
+			# ✅ APPLIQUER LE SHADER MANUELLEMENT
+			setup_tile_shader(new_tile, y)
 
 			# Stocker dans la grille
 			island_tile_map[x].append(new_tile)
 	
 	print("  ✅ Grille %d×%d créée (%s)" % [GRID_SIZE, GRID_SIZE, group_name])
+
+func setup_tile_shader(tile: Area2D, row: int):
+	"""Configure le shader de profondeur pour la tuile"""
+	# Trouver le sprite de la tuile
+	var tile_sprite = tile.get_node_or_null("tile")
+	if not tile_sprite or not tile_sprite is Sprite2D:
+		return
+	
+	# Vérifier si le shader est déjà appliqué
+	if tile_sprite.material and tile_sprite.material is ShaderMaterial:
+		# Le shader existe, juste mettre à jour le depth_factor
+		var shader_mat = tile_sprite.material as ShaderMaterial
+		
+		# Calculer la profondeur selon la ligne (0 = loin, 7 = près)
+		var depth = float(row) / float(GRID_SIZE - 1)
+		shader_mat.set_shader_parameter("depth_factor", depth)
+	else:
+		# Créer le matériau shader manuellement
+		var shader_mat = ShaderMaterial.new()
+		var shader = load("res://shaders/iso_depth_effect.gdshader")
+		shader_mat.shader = shader
+		
+		# Calculer la profondeur selon la ligne
+		var depth = float(row) / float(GRID_SIZE - 1)
+		shader_mat.set_shader_parameter("depth_factor", depth)
+		
+		# Appliquer le matériau
+		tile_sprite.material = shader_mat
+	
 
 # ============================================================================
 # CHARGEMENT DES TOURS DEPUIS LA SAUVEGARDE
