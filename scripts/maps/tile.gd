@@ -1,16 +1,31 @@
 extends Area2D
 
-var team = ""  # "player" ou "enemy"
-var max_health = 3
-var health = 3
-var is_stunned = false
-var base_speed = 75.0  # Pour plus tard si les tuiles bougent
+# ============================================================================
+# TUILE - Élément de base de l'île
+# ============================================================================
 
+# Équipe (1 = joueur, 2 = ennemi)
+var team: int = 1
+
+# Statistiques
+var max_health: int = 3
+var health: int = 3
+var is_stunned: bool = false
+var base_speed: float = 75.0
+
+# Effets visuels
 @onready var smoke_particles = preload("res://scenes/effects/smoke.tscn")
 @onready var tile_map = $TileMap
 
 # Système d'effets de statut
 var status_effects: StatusEffects
+
+# Cooldown pour éviter les collisions répétées
+var collision_cooldown: float = 0.0
+const COLLISION_COOLDOWN_TIME: float = 0.5
+
+# Debug
+var debug_collision_count: int = 0
 
 func _ready():
 	# Ajouter le système d'effets de statut
@@ -20,11 +35,14 @@ func _ready():
 	# Afficher une tuile aléatoire du TileMap
 	display_random_tile()
 	
+	# Configurer le shader de profondeur si disponible
 	var tile_sprite = get_node_or_null("tile")
 	if tile_sprite and tile_sprite is IsoDepthSprite:
 		tile_sprite.far_y = 200.0
 		tile_sprite.near_y = 1000.0
 		tile_sprite.update_depth()
+	
+	print("✅ Tuile %s créée (team=%d, groupe=%s)" % [name, team, "player" if team == 1 else "enemy"])
 
 func display_random_tile():
 	"""Affiche une tuile aléatoire du TileMap"""
@@ -32,13 +50,11 @@ func display_random_tile():
 		push_warning("⚠️ TileMap non trouvé dans la tuile")
 		return
 	
-	# Récupérer le TileSet
 	var tile_set = tile_map.tile_set
 	if not tile_set:
 		push_warning("⚠️ TileSet non configuré")
 		return
 	
-	# Récupérer la source (atlas) - normalement source 0
 	var source_id = 0
 	var source = tile_set.get_source(source_id)
 	
@@ -63,38 +79,38 @@ func display_random_tile():
 	# Choisir une tuile aléatoire
 	var random_tile = available_tiles[randi() % available_tiles.size()]
 	
-	# OPTION 1 : Utiliser le sprite existant avec une région de la texture
+	# Appliquer la texture au sprite
 	var tile_sprite = get_node_or_null("tile")
 	if tile_sprite and tile_sprite is Sprite2D:
-		# Récupérer la texture de l'atlas
 		var atlas_texture = atlas_source.texture
-		
-		# Calculer la région de la tuile dans l'atlas
 		var tile_size = atlas_source.texture_region_size
 		var margins = atlas_source.margins
 		var separation = atlas_source.separation
 		
-		# Position de la tuile dans l'atlas
 		var atlas_x = margins.x + random_tile.x * (tile_size.x + separation.x)
 		var atlas_y = margins.y + random_tile.y * (tile_size.y + separation.y)
 		
-		# Créer une AtlasTexture pour afficher juste cette région
 		var atlas_tex = AtlasTexture.new()
 		atlas_tex.atlas = atlas_texture
 		atlas_tex.region = Rect2(atlas_x, atlas_y, tile_size.x, tile_size.y)
 		
-		# Appliquer au sprite
 		tile_sprite.texture = atlas_tex
 		tile_sprite.visible = true
 	
 	# Masquer le TileMap (on n'en a plus besoin)
 	tile_map.visible = false
 
-func _process(_delta):
+func _process(delta):
+	# Vérifier la mort
 	if health < 1:
 		death()
+		return
 	
-	# Feedback visuel selon les effets
+	# Réduire le cooldown de collision
+	if collision_cooldown > 0:
+		collision_cooldown -= delta
+	
+	# Mettre à jour le feedback visuel selon les effets
 	update_visual_feedback()
 
 func update_visual_feedback():
@@ -114,6 +130,10 @@ func update_visual_feedback():
 	elif status_effects.has_effect("shield"):
 		modulate = Color(0.7, 0.7, 1, 1)  # Bleu clair pour bouclier
 
+# ============================================================================
+# SYSTÈME DE SANTÉ
+# ============================================================================
+
 func take_damage(amount: int):
 	"""Reçoit des dégâts (avec bouclier)"""
 	# Le bouclier absorbe d'abord
@@ -122,6 +142,9 @@ func take_damage(amount: int):
 	
 	# Effet visuel
 	show_damage_feedback()
+	
+	# Debug
+	print("  💢 %s prend %d dégâts (HP: %d/%d)" % [name, actual_damage, health, max_health])
 	
 	if health <= 0:
 		death()
@@ -139,6 +162,7 @@ func get_max_health() -> int:
 
 func death():
 	"""Mort de la tuile"""
+	print("💀 Tuile %s détruite (team=%d)" % [name, team])
 	queue_free()
 
 func show_damage_feedback():
@@ -178,32 +202,94 @@ func apply_shield(amount: int, duration: float):
 	status_effects.apply_shield(amount, duration)
 
 # ============================================================================
-# COLLISION (conservé de l'ancien système)
+# COLLISION - ✅ SYSTÈME CORRIGÉ
 # ============================================================================
 
 func _on_area_entered(area):
-	# Vérifie que l'autre est une tuile
+	"""Détecte les collisions avec d'autres tuiles"""
+	
+	# Vérifier le cooldown pour éviter les collisions répétées
+	if collision_cooldown > 0:
+		return
+	
+	# Vérifier que c'est bien une tuile
 	if not area.is_in_group("tile"):
 		return
-
-	# Collision entre équipes opposées
-	if team == 1 and area.is_in_group("enemy"):  
-		resolve_collision(area)
-	elif team == 2 and area.is_in_group("player"): 
+	
+	# ============================================================
+	# ✅ FIX PRINCIPAL : Vérification correcte des équipes
+	# ============================================================
+	
+	# Déterminer si l'autre tuile est ennemie
+	var is_enemy_tile: bool = false
+	
+	if team == 1:
+		# Je suis JOUEUR (team=1) → Mon ennemi a le groupe "enemy"
+		is_enemy_tile = area.is_in_group("enemy")
+	elif team == 2:
+		# Je suis ENNEMI (team=2) → Mon ennemi a le groupe "player"
+		is_enemy_tile = area.is_in_group("player")
+	
+	# Debug - Afficher les informations de collision
+	debug_collision_count += 1
+	if debug_collision_count % 10 == 0:  # Log tous les 10 checks pour éviter le spam
+		print("🔍 Collision check #%d:" % debug_collision_count)
+		print("  - Moi: %s (team=%d, groupes=%s)" % [name, team, get_groups()])
+		print("  - Autre: %s (groupes=%s)" % [area.name if area else "null", area.get_groups() if area else "null"])
+		print("  - Est ennemi? %s" % is_enemy_tile)
+	
+	# Résoudre la collision SEULEMENT si c'est un vrai ennemi
+	if is_enemy_tile:
 		resolve_collision(area)
 
 func resolve_collision(other):
-	# Réduction des PV
+	"""Résout la collision entre deux tuiles ennemies"""
+	
+	# Activer le cooldown pour éviter les impacts multiples
+	collision_cooldown = COLLISION_COOLDOWN_TIME
+	
+	# Appliquer les dégâts mutuels
 	take_damage(1)
 	if other.has_method("take_damage"):
 		other.take_damage(1)
-
+	
 	# Générer des particules de fumée
 	spawn_smoke(global_position)
 	spawn_smoke(other.global_position)
+	
+	print("💥 Collision résolue: %s (team=%d) ⚔️ %s (team=%s)" % [
+		name, 
+		team, 
+		other.name if other else "null",
+		other.team if other and "team" in other else "?"
+	])
 
 func spawn_smoke(pos: Vector2):
+	"""Crée des particules de fumée"""
 	var smoke = smoke_particles.instantiate()
 	get_tree().current_scene.add_child(smoke)
 	smoke.global_position = pos
 	smoke.emitting = true
+
+# ============================================================================
+# DEBUG & UTILITAIRES
+# ============================================================================
+
+func _to_string():
+	return "Tile(name=%s, team=%d, hp=%d/%d, groups=%s)" % [
+		name, 
+		team, 
+		health, 
+		max_health, 
+		get_groups()
+	]
+
+func get_team_name() -> String:
+	"""Retourne le nom de l'équipe pour le debug"""
+	match team:
+		1:
+			return "PLAYER"
+		2:
+			return "ENEMY"
+		_:
+			return "UNKNOWN"

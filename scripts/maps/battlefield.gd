@@ -22,11 +22,15 @@ var player_raft: JunkRaft
 
 # État du combat
 var is_game_over = false
-var speed_boost_active = false  # Pour l'accélération en cas de stagnation
-const STAGNATION_TIME = 10.0  # Temps en secondes sans destruction de tuile avant accélération
-var time_since_last_tile_destroyed = 0.0  # Chronomètre
-var last_tile_count_player = 64  # Nombre de tuiles au dernier check
+var speed_boost_active = false
+const STAGNATION_TIME = 10.0
+var time_since_last_tile_destroyed = 0.0
+var last_tile_count_player = 64
 var last_tile_count_enemy = 64
+
+# Cooldown pour éviter les collisions répétées
+var collision_cooldown = 0.0
+const COLLISION_COOLDOWN_TIME = 1.0
 
 func _ready():
 	# Configurer l'UI pour qu'elle continue de fonctionner en pause
@@ -39,7 +43,7 @@ func _ready():
 	# S'assurer que l'UI de fin est cachée au départ
 	ui.visible = false
 	
-	# IMPORTANT : Attendre que tout soit prêt avant de setup le swipe
+	# Attendre que tout soit prêt avant de setup le swipe
 	await get_tree().process_frame
 	setup_swipe_system()
 	
@@ -74,7 +78,11 @@ func _process(delta):
 	if is_game_over:
 		return
 	
-	# NOUVEAU : Vérifier si le combat stagne
+	# Réduire le cooldown de collision
+	if collision_cooldown > 0:
+		collision_cooldown -= delta
+	
+	# Vérifier si le combat stagne
 	check_stagnation(delta)
 	
 	# Déplacer l'île du joueur selon la vitesse du swipe
@@ -82,21 +90,22 @@ func _process(delta):
 		var player_speed = player_raft.current_speed
 		# Appliquer le boost de vitesse si actif
 		if speed_boost_active:
-			player_speed *= 3.0  # Triple la vitesse
+			player_speed *= 3.0
 		player_path_follow.progress += player_speed * delta
 	
 	# L'ennemi garde sa vitesse fixe (ou accélère aussi si boost actif)
 	var enemy_speed = 75.0
 	if speed_boost_active:
-		enemy_speed *= 3.0  # Triple la vitesse
+		enemy_speed *= 3.0
 	
 	enemy_path_follow.progress += enemy_speed * delta
 	
 	# Vérifier les conditions de victoire/défaite
 	check_victory_conditions()
 	
-	# Détecter la collision entre les îles
-	check_island_collision()
+	# Détecter la collision entre les îles (avec cooldown)
+	if collision_cooldown <= 0:
+		check_island_collision()
 
 func check_stagnation(delta: float):
 	"""Vérifie si le combat stagne (aucune tuile détruite depuis X secondes)"""
@@ -161,7 +170,7 @@ func check_island_collision():
 	var distance = player_island.global_position.distance_to(enemy_island.global_position)
 	
 	# Seuil de collision (à ajuster selon la taille des îles)
-	var collision_threshold = 200.0
+	var collision_threshold = 250.0
 	
 	if distance < collision_threshold:
 		trigger_island_impact()
@@ -171,6 +180,9 @@ func trigger_island_impact():
 	if not player_raft:
 		return
 	
+	# Activer le cooldown pour éviter les impacts répétés
+	collision_cooldown = COLLISION_COOLDOWN_TIME
+	
 	# Calculer les dégâts d'impact basés sur la vitesse
 	var damage = player_raft.on_collision_with_enemy()
 	
@@ -179,14 +191,18 @@ func trigger_island_impact():
 	# Appliquer les dégâts aux tuiles ennemies les plus proches
 	apply_collision_damage_to_tiles(damage, "enemy")
 	
-	# Les tuiles ennemies ripostent aussi
-	var enemy_damage = 10.0  # Dégâts fixes pour l'ennemi
+	# Les tuiles ennemies ripostent aussi (dégâts fixes)
+	var enemy_damage = 15.0
 	apply_collision_damage_to_tiles(enemy_damage, "player")
+	
+	# Réinitialiser le compteur de stagnation après un impact
+	time_since_last_tile_destroyed = 0.0
 
 func apply_collision_damage_to_tiles(damage: float, target_group: String):
 	"""Applique les dégâts d'impact aux tuiles du groupe cible"""
-	var tiles = get_tree().get_nodes_in_group(target_group)
-	tiles = tiles.filter(func(node): return node.is_in_group("tile"))
+	var all_tiles = get_tree().get_nodes_in_group(target_group)
+	# Filtrer pour ne garder que les vraies tuiles
+	var tiles = all_tiles.filter(func(node): return node.is_in_group("tile"))
 	
 	if tiles.size() == 0:
 		return
@@ -202,8 +218,9 @@ func apply_collision_damage_to_tiles(damage: float, target_group: String):
 	var damage_per_tile = int(damage / tiles_to_hit)
 	
 	for i in range(tiles_to_hit):
-		if sorted_tiles[i].has_method("take_damage"):
+		if is_instance_valid(sorted_tiles[i]) and sorted_tiles[i].has_method("take_damage"):
 			sorted_tiles[i].take_damage(damage_per_tile)
+			print("  💢 Tuile %s prend %d dégâts d'impact" % [sorted_tiles[i].name, damage_per_tile])
 
 func end_game(winner: String):
 	"""Termine la partie"""
@@ -246,14 +263,12 @@ func end_game(winner: String):
 
 func _on_speed_changed(new_speed: float):
 	"""Callback quand la vitesse change"""
-	# On pourrait afficher un indicateur de vitesse ici
 	pass
 
 func _on_fuel_changed(new_fuel: float):
 	"""Callback quand le carburant change"""
-	# On pourrait afficher une alerte si le fuel est bas
 	if new_fuel < 20.0 and new_fuel > 0:
-		pass  # Effet visuel "fuel faible"
+		pass
 
 func _on_out_of_fuel():
 	"""Callback quand il n'y a plus de carburant"""
