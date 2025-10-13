@@ -1,22 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://b02cm4vtj8goe"]
+[gd_scene load_steps=3 format=3 uid="uid://b02cm4vtj8goe"]
 
 [ext_resource type="Script" uid="uid://dmu8d8hfp2u71" path="res://scripts/maps/tile.gd" id="1_jdae2"]
-[ext_resource type="Shader" uid="uid://b24yq4qhjud5h" path="res://shaders/iso_depth_effect.gdshader" id="2_j2wiq"]
 [ext_resource type="Texture2D" uid="uid://jhfidxf26olx" path="res://assets/tile/tile_002.png" id="3_4l528"]
-
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_1fp51"]
-shader = ExtResource("2_j2wiq")
-shader_parameter/depth_factor = 0.50000002375
-shader_parameter/near_tint_color = Color(0.92014664, 4.0076366e-06, 9.570476e-07, 1)
-shader_parameter/far_tint_color = Color(0.8, 0.9, 1.1, 1)
-shader_parameter/brightness_range = 0.4
-shader_parameter/contrast_strength = 0.2
-shader_parameter/saturation_range = 0.3
-shader_parameter/enable_rim_lighting = true
-shader_parameter/rim_color = Color(0.3, 0.6, 1, 1)
-shader_parameter/rim_threshold = 0.1
-shader_parameter/rim_intensity = 0.8
-shader_parameter/ao_strength = 0.3
 
 [node name="tile_area" type="Area2D"]
 process_mode = 3
@@ -29,7 +14,6 @@ polygon = PackedVector2Array(2, -19.5, 63, -0.5, 1, 14.5, -61, -1.5)
 [node name="tile" type="Sprite2D" parent="."]
 light_mask = 7
 visibility_layer = 7
-material = SubResource("ShaderMaterial_1fp51")
 position = Vector2(67, 56)
 scale = Vector2(2, 2)
 texture = ExtResource("3_4l528")

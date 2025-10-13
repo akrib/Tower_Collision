@@ -62,14 +62,17 @@ func _ready():
 	#print("  ✅ Grille %d×%d créée (%s)" % [GRID_SIZE, GRID_SIZE, group_name])
 	
 	
+var min_tile_y: float = INF
+var max_tile_y: float = -INF
+
 func create_iso_grid():
 	"""Crée la grille isométrique de 8×8 tuiles"""
 	var group_name = "player" if team_id == 1 else "enemy"
 	
+	# ÉTAPE 1: Créer toutes les tuiles SANS shader
 	for x in range(GRID_SIZE):
 		island_tile_map.append([])
 		for y in range(GRID_SIZE):
-			# Créer une nouvelle tuile
 			var new_tile = tile_scene.instantiate()
 			add_child(new_tile)
 
@@ -82,90 +85,80 @@ func create_iso_grid():
 			new_tile.team = team_id
 			new_tile.add_to_group(group_name)
 			new_tile.add_to_group("tile")
-			
-			# ✅ APPLIQUER LE SHADER MANUELLEMENT
-			setup_tile_shader(new_tile, y)
 
 			# Stocker dans la grille
 			island_tile_map[x].append(new_tile)
 	
+	# ÉTAPE 2: Calculer les limites Y globales
+	await get_tree().process_frame  # Attendre que les positions soient finalisées
+	
+	for x in range(GRID_SIZE):
+		for y in range(GRID_SIZE):
+			var tile_y = island_tile_map[x][y].global_position.y
+			min_tile_y = min(min_tile_y, tile_y)
+			max_tile_y = max(max_tile_y, tile_y)
+	
+	print("  📏 Limites Y calculées: %.1f → %.1f" % [min_tile_y, max_tile_y])
+	
+	# ÉTAPE 3: Appliquer le shader à toutes les tuiles
+	for x in range(GRID_SIZE):
+		for y in range(GRID_SIZE):
+			setup_tile_shader_by_y(island_tile_map[x][y])
+	
 	print("  ✅ Grille %d×%d créée (%s)" % [GRID_SIZE, GRID_SIZE, group_name])
 
-func setup_tile_shader(tile: Area2D, row: int):
-	"""Configure le shader de profondeur pour la tuile avec effet amplifié"""
+
+func setup_tile_shader_by_y(tile: Area2D):
+	"""Configure le shader basé sur la position Y globale"""
 	var tile_sprite = tile.get_node_or_null("tile")
 	if not tile_sprite or not tile_sprite is Sprite2D:
-		print("  ⚠️ Sprite 'tile' non trouvé dans ", tile.name)
 		return
 	
 	# Désactiver le script IsoDepthController
 	if tile_sprite.get_script():
 		tile_sprite.set_script(null)
 	
-	# Créer ou récupérer le matériau shader
-	var shader_mat: ShaderMaterial
-	if tile_sprite.material and tile_sprite.material is ShaderMaterial:
-		shader_mat = tile_sprite.material as ShaderMaterial
-	else:
-		shader_mat = ShaderMaterial.new()
-		var shader = load("res://shaders/iso_depth_effect.gdshader")
-		if not shader:
-			push_error("❌ Shader iso_depth_effect.gdshader introuvable!")
-			return
-		shader_mat.shader = shader
-		tile_sprite.material = shader_mat
+	# Créer le matériau shader
+	var shader_mat = ShaderMaterial.new()
+	var shader = load("res://shaders/iso_depth_effect.gdshader")
+	if not shader:
+		push_error("❌ Shader introuvable!")
+		return
+	
+	shader_mat.shader = shader
+	tile_sprite.material = shader_mat
 	
 	# ============================================================
-	# CALCUL DU DEPTH FACTOR - COURBE EXPONENTIELLE
+	# CALCUL DU DEPTH FACTOR BASÉ SUR Y
 	# ============================================================
-	var linear_depth = float(row) / float(GRID_SIZE - 1)
 	
-	# Courbe quadratique pour amplifier les différences
-	var depth = pow(linear_depth, 2.0)
+	var tile_y = tile.global_position.y
 	
-	# Alternative : courbe cubique (effet encore plus fort)
-	# var depth = pow(linear_depth, 3.0)
+	# Calculer le depth linéaire entre min et max
+	var linear_depth = 0.5  # Défaut au milieu
+	if max_tile_y > min_tile_y:
+		linear_depth = (tile_y - min_tile_y) / (max_tile_y - min_tile_y)
 	
-	# Alternative : plage personnalisée
-	# var depth = lerp(0.2, 1.0, linear_depth)
-	
+	# Appliquer une courbe pour effet plus dramatique
+	#var depth = pow(linear_depth, 2.0)  # Quadratique
+	var depth = linear_depth
 	shader_mat.set_shader_parameter("depth_factor", depth)
 	
 	# ============================================================
-	# PARAMÈTRES D'INTENSITÉ - Amplifier l'effet visuel
+	# PARAMÈTRES D'INTENSITÉ
 	# ============================================================
 	
-	# Luminosité : différence entre loin et près (0.8 = fort)
-	shader_mat.set_shader_parameter("brightness_range", 0.8)
+	shader_mat.set_shader_parameter("brightness_range", 2.0)
+	shader_mat.set_shader_parameter("contrast_strength", 1.0)
+	shader_mat.set_shader_parameter("saturation_range", 1.0)
+	shader_mat.set_shader_parameter("rim_intensity", 2.0)
+	shader_mat.set_shader_parameter("ao_strength", 1.0)
 	
-	# Contraste : accentuer les détails (0.4 = moyen-fort)
-	shader_mat.set_shader_parameter("contrast_strength", 0.4)
+	# Teintes
+	shader_mat.set_shader_parameter("near_tint_color", Vector3(1.5, 1.5, 1.5))  # Gris clair
+	shader_mat.set_shader_parameter("far_tint_color", Vector3(0.3, 0.3, 0.3))   # Gris foncé
 	
-	# Saturation : différence de couleur (0.5 = moyen-fort)
-	shader_mat.set_shader_parameter("saturation_range", 0.5)
-	
-	# Rim Lighting : contours lumineux sur les objets proches (1.5 = visible)
-	shader_mat.set_shader_parameter("rim_intensity", 1.5)
-	
-	# Ambient Occlusion : ombrage dans les creux (0.4 = léger)
-	shader_mat.set_shader_parameter("ao_strength", 0.4)
-	
-	# ============================================================
-	# TEINTES DE COULEUR (optionnel)
-	# ============================================================
-	
-	# Teinte chaude devant (jaune-orangé)
-	shader_mat.set_shader_parameter("near_tint_color", Vector3(1.3, 1.15, 0.85))
-	
-	# Teinte froide derrière (bleu-gris)
-	shader_mat.set_shader_parameter("far_tint_color", Vector3(0.65, 0.75, 1.25))
-	
-	# ============================================================
-	# DEBUG
-	# ============================================================
-	print("  🎨 Shader appliqué à %s (row %d, linear: %.2f, depth: %.2f)" % 
-		[tile.name, row, linear_depth, depth])
-		
+	print("  🎨 %s → Y: %.1f, depth: %.2f" % [tile.name, tile_y, depth])
 # ============================================================================
 # CHARGEMENT DES TOURS DEPUIS LA SAUVEGARDE
 # ============================================================================
