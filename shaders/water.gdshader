@@ -3,6 +3,7 @@ shader_type canvas_item;
 uniform sampler2D noise_tex : source_color;
 uniform float wave_speed = 0.3;
 uniform float wave_strength = 0.03;
+uniform float alpha_strength : hint_range(0.0, 1.0) = 0.7; // 🔸 Contrôle de la transparence
 
 void fragment() {
     vec2 uv = UV;
@@ -12,36 +13,20 @@ void fragment() {
     // ========================================================
 
     float t = uv.y;
-    float scale = mix(0.08, 0.15, t);
-    uv.y = (uv.y - 0.5) / scale + 0.5;
+    float scale = mix(0.001, 0.08, t);
+    uv.y = (uv.y - 0.7) / scale + 0.0;
 
     // ========================================================
     // ONDULATIONS CIRCULAIRES DEPUIS L'EXTÉRIEUR
     // ========================================================
 
-    // Centre de l'image
     vec2 center = vec2(2.5, 1.5);
-
-    // Distance du centre (0.0 au centre, augmente vers les bords)
     float distance_from_center = length(UV - center);
-
-    // Distance maximale (du centre au coin)
     float max_distance = length(vec2(0.5, 0.5));
-
-    // Normaliser la distance (0.0 au centre, 1.0 aux coins)
     float normalized_distance = distance_from_center / max_distance;
-
-    // Créer des vagues circulaires qui partent des bords vers le centre
-    // Plus on est loin du centre, plus la phase est avancée
     float wave_phase = normalized_distance * 5.0 - TIME * wave_speed * 2.0;
-
-    // Calcul de l'ondulation
     float wave = sin(wave_phase) * wave_strength * 1.0;
-
-    // Direction vers le centre
     vec2 direction_to_center = normalize(center - UV);
-
-    // Appliquer l'ondulation perpendiculaire à la direction
     vec2 perpendicular = vec2(-direction_to_center.y, direction_to_center.x);
     uv += perpendicular * wave;
 
@@ -65,10 +50,18 @@ void fragment() {
 
     vec4 color = texture(TEXTURE, uv);
 
-    // Assombrir selon Y pour effet de profondeur
     float depth_darkness = mix(0.4, 1.0, UV.y);
-
     color.rgb *= depth_darkness;
+
+    // ========================================================
+    // AJOUT DE TRANSPARENCE
+    // ========================================================
+
+    // Plus transparent vers le bas de la texture
+    float alpha_gradient = mix(0.3, 0.5, UV.y);
+    float alpha = alpha_strength * alpha_gradient;
+
+    color.a *= alpha;
 
     COLOR = color;
 }

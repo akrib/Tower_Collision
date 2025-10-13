@@ -2,7 +2,7 @@ extends CharacterBody2D
 class_name BaseProjectile
 
 # ============================================================================
-# SYSTÈME DE PROJECTILES AVEC TRAJECTOIRES BALISTIQUES CORRIGÉES
+# SYSTÈME DE PROJECTILES AVEC INTÉGRATION VERLET + PRÉDICTION DE TRAJECTOIRE
 # ============================================================================
 
 enum Team { NONE, PLAYER, ENEMY }
@@ -16,11 +16,16 @@ enum ProjectileType { DIRECT, HOMING, BALLISTIC, BEAM }
 @export var speed: int = 2000
 @export var piercing: int = 0
 
-@export_group("Ballistic Physics")
-@export var initial_speed: float = 800.0
-@export var arc_height: float = 200.0
-@export var gravity: float = 1500.0
+@export_group("Verlet Physics")
+@export var initial_velocity: Vector2 = Vector2(400.0, -300.0)
+@export var gravity_force: Vector2 = Vector2(0.0, 980.0)  # Gravité réaliste
+@export var air_resistance: float = 0.99  # Résistance de l'air
 @export var lifetime: float = 5.0
+
+@export_group("Trajectory Prediction")
+@export var show_trajectory: bool = true
+@export var trajectory_points: int = 30
+@export var trajectory_color: Color = Color(1, 1, 0, 0.5)
 
 @export_group("Special Effects")
 @export var splash_radius: float = 0.0
@@ -29,17 +34,17 @@ enum ProjectileType { DIRECT, HOMING, BALLISTIC, BEAM }
 @export var poison_damage: int = 0
 @export var poison_duration: float = 0.0
 
-# Marqueur de cible
+# Verlet Integration Variables
+var current_position: Vector2 = Vector2.ZERO
+var previous_position: Vector2 = Vector2.ZERO
+var acceleration: Vector2 = Vector2.ZERO
+
+# Marqueur de cible (ligne horizontale)
 var target_marker: Area2D = null
 var target_position: Vector2 = Vector2.ZERO
 
-# Variables de trajectoire (TOUT EN GLOBAL)
-var start_position: Vector2 = Vector2.ZERO
-var velocity_2d: Vector2 = Vector2.ZERO
-var vertical_velocity: float = 0.0
-var vertical_offset: float = 0.0  # ✅ NOUVEAU : Offset Y simulé
-var travel_time: float = 0.0
-var max_travel_time: float = 2.0
+# Ligne de trajectoire prédite
+var trajectory_line: Line2D = null
 
 # État
 var time_alive: float = 0.0
@@ -54,232 +59,339 @@ var has_impacted: bool = false
 @onready var water_splash = preload("res://scenes/effects/smoke.tscn")
 
 func _ready():
+	# Timer de sécurité
 	var timer = get_tree().create_timer(lifetime)
 	timer.timeout.connect(_on_lifetime_expired)
+	
+	print("🔫 Projectile Verlet créé à: %s" % global_position)
 
 func _physics_process(delta):
 	if not is_initialized:
 		return
 	
 	time_alive += delta
-	travel_time += delta
 	
-	# Mouvement balistique
-	move_ballistic(delta)
+	# Intégration Verlet
+	verlet_integrate(delta)
 	
-	# Vérifier si on a atteint le marqueur
+	# Vérifier si touche le sol
+	if global_position.y > get_viewport_rect().size.y:
+		print("⚠️ Projectile sorti en bas de l'écran")
+		spawn_water_splash(global_position)
+		cleanup()
+		return
+	
+	# Vérifier collision avec marqueur
 	check_marker_collision()
 
 # ============================================================================
-# CONFIGURATION & CRÉATION DU MARQUEUR
+# CONFIGURATION & PRÉDICTION DE TRAJECTOIRE
 # ============================================================================
 
-func setup(p_team: Team, p_damage: int, p_target, p_speed: float = 800.0):
+func setup(p_team: Team, p_damage: int, p_target, launch_speed: float = 600.0):
+	"""Configure le projectile avec intégration Verlet"""
 	team = p_team
 	bullet_damage = p_damage
-	initial_speed = p_speed
-	start_position = global_position  # ✅ GLOBAL
 	
-	# Déterminer la position cible
+	# Position de départ
+	current_position = global_position
+	previous_position = global_position
+	
+	# Déterminer la cible
 	if is_instance_valid(p_target):
-		target_position = p_target.global_position  # ✅ GLOBAL
+		target_position = p_target.global_position
 	elif p_target is Vector2:
 		target_position = p_target
 	else:
 		var forward = Vector2(1, 0) if team == Team.PLAYER else Vector2(-1, 0)
 		target_position = global_position + forward * 400.0
 	
-	# Calculer la trajectoire
-	calculate_ballistic_trajectory()
+	# Calculer la vélocité initiale vers la cible
+	calculate_launch_velocity(launch_speed)
+	
+	# Initialiser Verlet avec la vélocité
+	previous_position = current_position - initial_velocity * 0.016  # ~1 frame à 60fps
 	
 	is_initialized = true
 	
-	# Créer le marqueur
-	call_deferred("create_target_marker")
+	# Créer la ligne de trajectoire prédite
+	if show_trajectory:
+		call_deferred("create_trajectory_prediction")
 	
-	var dir = "→" if (target_position.x > start_position.x) else "←"
-	print("🎯 %s tire %s vers %s (dist: %.0f)" % [
+	# Créer le marqueur
+	call_deferred("create_target_marker_line")
+	
+	print("🎯 %s tire depuis %s vers %s (v: %s)" % [
 		"JOUEUR" if team == Team.PLAYER else "ENNEMI",
-		dir,
+		current_position,
 		target_position,
-		start_position.distance_to(target_position)
+		initial_velocity
 	])
 
-func create_target_marker():
+func calculate_launch_velocity(launch_speed: float):
+	"""Calcule la vélocité de lancement pour atteindre la cible"""
+	var direction = (target_position - current_position).normalized()
+	var distance = current_position.distance_to(target_position)
+	
+	# Angle de lancement optimal (45° pour portée max, ajusté selon distance)
+	var launch_angle = -45.0  # Degrés (négatif = vers le haut)
+	
+	# Ajuster l'angle selon la distance
+	if distance < 300.0:
+		launch_angle = -60.0  # Arc plus prononcé pour courte distance
+	elif distance > 800.0:
+		launch_angle = -30.0  # Arc plus plat pour longue distance
+	
+	# Convertir en radians
+	var angle_rad = deg_to_rad(launch_angle)
+	
+	# Direction horizontale (gauche ou droite)
+	var horizontal_dir = 1.0 if target_position.x > current_position.x else -1.0
+	
+	# Calculer les composantes de vélocité
+	initial_velocity.x = cos(angle_rad) * launch_speed * horizontal_dir
+	initial_velocity.y = sin(angle_rad) * launch_speed  # Négatif = vers le haut
+
+# ============================================================================
+# INTÉGRATION VERLET
+# ============================================================================
+
+func verlet_integrate(delta: float):
+	"""Intégration de Verlet pour physique stable
+	
+	Formule Verlet:
+	x(t+dt) = 2*x(t) - x(t-dt) + a*dt²
+	
+	Avantages:
+	- Très stable numériquement
+	- Conservation de l'énergie
+	- Pas besoin de stocker la vélocité explicitement
+	"""
+	
+	# Calculer l'accélération (gravité + autres forces)
+	acceleration = gravity_force
+	
+	# Sauvegarder l'ancienne position
+	var temp_position = current_position
+	
+	# Formule de Verlet
+	current_position = 2.0 * current_position - previous_position + acceleration * delta * delta
+	
+	# Appliquer la résistance de l'air
+	var velocity = current_position - previous_position
+	velocity *= air_resistance
+	current_position = temp_position + velocity
+	
+	# Mettre à jour la position précédente
+	previous_position = temp_position
+	
+	# Appliquer à la position globale du node
+	global_position = current_position
+	
+	# Rotation du sprite selon la vélocité
+	if sprite:
+		var vel = current_position - previous_position
+		if vel.length() > 0.1:
+			sprite.rotation = vel.angle()
+
+# ============================================================================
+# PRÉDICTION DE TRAJECTOIRE
+# ============================================================================
+
+func create_trajectory_prediction():
+	"""Crée une ligne montrant la trajectoire prédite"""
+	trajectory_line = Line2D.new()
+	trajectory_line.width = 2.0
+	trajectory_line.default_color = trajectory_color
+	trajectory_line.z_index = 100
+	
+	# Ajouter à la scène
+	var battlefield = get_battlefield()
+	if battlefield:
+		battlefield.add_child(trajectory_line)
+	else:
+		add_child(trajectory_line)
+	
+	# Calculer les points de la trajectoire
+	var predicted_points = predict_trajectory(trajectory_points)
+	
+	for point in predicted_points:
+		trajectory_line.add_point(point)
+	
+	print("  📈 Trajectoire prédite avec %d points" % trajectory_points)
+	
+	# Faire disparaître la ligne après 1 seconde
+	var tween = create_tween()
+	tween.tween_property(trajectory_line, "modulate:a", 0.0, 1.0)
+	tween.tween_callback(func(): 
+		if is_instance_valid(trajectory_line):
+			trajectory_line.queue_free()
+	)
+
+func predict_trajectory(num_points: int) -> Array:
+	"""Prédit la trajectoire en simulant Verlet en avance
+	
+	Retourne un array de Vector2 représentant la trajectoire future
+	"""
+	var points = []
+	
+	# États temporaires pour la simulation
+	var sim_current = current_position
+	var sim_previous = previous_position
+	var sim_delta = 0.05  # Pas de temps de simulation
+	
+	for i in range(num_points):
+		# Ajouter le point actuel
+		points.append(sim_current)
+		
+		# Simuler un pas Verlet
+		var temp = sim_current
+		sim_current = 2.0 * sim_current - sim_previous + gravity_force * sim_delta * sim_delta
+		
+		# Appliquer résistance
+		var vel = sim_current - sim_previous
+		vel *= air_resistance
+		sim_current = temp + vel
+		
+		sim_previous = temp
+		
+		# Arrêter si la trajectoire sort de l'écran
+		if sim_current.y > get_viewport_rect().size.y + 100:
+			break
+	
+	return points
+
+# ============================================================================
+# MARQUEUR DE CIBLE (LIGNE)
+# ============================================================================
+
+func create_target_marker_line():
+	"""Crée un marqueur ligne à la position cible"""
 	target_marker = Area2D.new()
-	target_marker.name = "TargetMarker"
+	target_marker.name = "TargetMarkerLine"
 	target_marker.global_position = target_position
 	
+	# Ligne horizontale
 	var collision = CollisionShape2D.new()
-	var circle = CircleShape2D.new()
-	circle.radius = 60.0
-	collision.shape = circle
+	var rect = RectangleShape2D.new()
+	rect.size = Vector2(200.0, 30.0)
+	collision.shape = rect
 	target_marker.add_child(collision)
 	
 	# Ajouter à la scène
-	var tree = get_tree()
-	if not tree:
-		target_marker.queue_free()
-		return
+	var battlefield = get_battlefield()
+	if battlefield:
+		battlefield.add_child(target_marker)
 	
-	var scene_root = tree.root
-	if not scene_root:
-		target_marker.queue_free()
-		return
-	
-	var main_scene = null
-	for child in scene_root.get_children():
-		if child.name in ["Battlefield", "battlefield", "MainScene", "main"]:
-			main_scene = child
-			break
-	
-	if not main_scene:
-		for child in scene_root.get_children():
-			if not child is Window:
-				main_scene = child
-				break
-	
-	if main_scene:
-		main_scene.add_child(target_marker)
-	else:
-		scene_root.add_child(target_marker)
-	
+	# Signal
 	target_marker.area_entered.connect(_on_marker_reached)
 	
 	# Debug visuel
 	if OS.is_debug_build():
-		var debug_circle = Polygon2D.new()
-		var points = []
-		for i in range(32):
-			var angle = i * PI * 2.0 / 32
-			points.append(Vector2(cos(angle), sin(angle)) * 60.0)
-		debug_circle.polygon = PackedVector2Array(points)
-		debug_circle.color = Color(1, 0, 0, 0.3)
-		target_marker.add_child(debug_circle)
+		var debug_rect = ColorRect.new()
+		debug_rect.size = Vector2(200.0, 30.0)
+		debug_rect.position = Vector2(-100.0, -15.0)
+		debug_rect.color = Color(1, 0, 0, 0.3)
+		target_marker.add_child(debug_rect)
 	
-	print("  📍 Marqueur créé à: %s" % target_position)
+	print("  📍 Marqueur LIGNE créé à: %s" % target_position)
 
-func calculate_ballistic_trajectory():
-	var distance_vector = target_position - start_position
-	var horizontal_distance = distance_vector.length()
+func get_battlefield():
+	"""Trouve la scène Battlefield"""
+	var tree = get_tree()
+	if not tree:
+		return null
 	
-	if horizontal_distance < 1.0:
-		var forward = Vector2(1, 0) if team == Team.PLAYER else Vector2(-1, 0)
-		target_position = start_position + forward * 50.0
-		distance_vector = target_position - start_position
-		horizontal_distance = distance_vector.length()
+	var root = tree.root
+	if not root:
+		return null
 	
-	var direction = distance_vector.normalized()
+	for child in root.get_children():
+		if child.name.to_lower() in ["battlefield", "mainscene", "main"]:
+			return child
 	
-	# Arc adaptatif
-	var adaptive_arc = arc_height
-	if horizontal_distance < 200.0:
-		adaptive_arc = arc_height * 0.2 * (horizontal_distance / 200.0)
-	elif horizontal_distance < 400.0:
-		adaptive_arc = arc_height * 0.5
-	
-	# Temps de vol adaptatif
-	if horizontal_distance < 100.0:
-		max_travel_time = 0.2
-	elif horizontal_distance < 300.0:
-		max_travel_time = 0.4 + (horizontal_distance - 100.0) / 500.0
-	else:
-		max_travel_time = sqrt(horizontal_distance / 200.0)
-		max_travel_time = clamp(max_travel_time, 0.5, 2.0)
-	
-	# ✅ Vélocité horizontale EN GLOBAL
-	velocity_2d = direction * (horizontal_distance / max_travel_time)
-	
-	# ✅ Vélocité verticale pour l'arc
-	var half_time = max_travel_time / 2.0
-	vertical_velocity = -(adaptive_arc + 0.5 * gravity * half_time * half_time) / half_time
-	
-	print("  📐 Arc: %.0f, Temps: %.2fs, Vélocité: %s" % [adaptive_arc, max_travel_time, velocity_2d])
+	return root.get_child(0) if root.get_child_count() > 0 else null
 
 # ============================================================================
-# MOUVEMENT BALISTIQUE CORRIGÉ
-# ============================================================================
-
-func move_ballistic(delta):
-	"""Mouvement en parabole - TOUT EN GLOBAL"""
-	
-	# ✅ 1. Mouvement horizontal (en global via velocity)
-	velocity = velocity_2d
-	
-	# ✅ 2. Mouvement vertical simulé (offset Y)
-	vertical_velocity += gravity * delta
-	vertical_offset += vertical_velocity * delta
-	
-	# ✅ 3. Déplacement horizontal avec move_and_slide
-	move_and_slide()
-	
-	# ✅ 4. Appliquer l'offset vertical APRÈS le déplacement horizontal
-	# On modifie global_position.y directement pour éviter les problèmes de local
-	var new_pos = global_position
-	new_pos.y = start_position.y + vertical_offset + (travel_time / max_travel_time) * (target_position.y - start_position.y)
-	global_position = new_pos
-	
-	# ✅ 5. Rotation du sprite selon la vélocité RÉELLE
-	if sprite:
-		var total_velocity = Vector2(velocity_2d.x, vertical_velocity)
-		sprite.rotation = total_velocity.angle()
-
-# ============================================================================
-# DÉTECTION DU MARQUEUR
+# DÉTECTION DE COLLISION
 # ============================================================================
 
 func check_marker_collision():
+	"""Vérifie collision avec le marqueur"""
 	if has_impacted:
 		return
 	
 	if not is_instance_valid(target_marker):
-		if travel_time >= max_travel_time * 1.5:
+		if time_alive > 3.0:
 			trigger_impact_without_marker()
 		return
 	
 	var distance = global_position.distance_to(target_marker.global_position)
 	
-	if distance < 70.0:
-		trigger_impact()
-	
-	if travel_time >= max_travel_time * 1.2:
+	if distance < 120.0:
 		trigger_impact()
 
-func trigger_impact_without_marker():
+func trigger_impact():
+	"""Impact au marqueur"""
 	if has_impacted:
 		return
 	
 	has_impacted = true
-	print("💥 Impact d'urgence à: %s" % target_position)
+	print("💥 Impact Verlet au marqueur: %s" % target_marker.global_position)
 	
-	var enemies = find_enemies_at_position(target_position)
+	var enemies = find_enemies_at_marker()
 	
 	if enemies.size() > 0:
 		hit_target(enemies[0])
 		if splash_radius > 0.0:
-			apply_splash_damage(target_position)
-		spawn_impact_effect(target_position)
+			apply_splash_damage(target_marker.global_position)
+		spawn_impact_effect(target_marker.global_position)
 	else:
-		spawn_water_splash(target_position)
+		spawn_water_splash(target_marker.global_position)
 	
 	cleanup()
 
-func find_enemies_at_position(pos: Vector2) -> Array:
+func trigger_impact_without_marker():
+	"""Impact d'urgence"""
+	if has_impacted:
+		return
+	
+	has_impacted = true
+	var enemies = find_enemies_at_position(global_position)
+	
+	if enemies.size() > 0:
+		hit_target(enemies[0])
+		spawn_impact_effect(global_position)
+	else:
+		spawn_water_splash(global_position)
+	
+	cleanup()
+
+func find_enemies_at_marker() -> Array:
+	"""Trouve les ennemis au marqueur"""
+	if not is_instance_valid(target_marker):
+		return []
+	
 	var enemies = []
 	var enemy_group = "enemy" if team == Team.PLAYER else "player"
-	var detection_radius = 60.0
+	var overlapping = target_marker.get_overlapping_areas()
 	
+	for area in overlapping:
+		if area.is_in_group("tile") and area.is_in_group(enemy_group):
+			enemies.append(area)
+	
+	return enemies
+
+func find_enemies_at_position(pos: Vector2) -> Array:
+	"""Trouve les ennemis à une position"""
+	var enemies = []
+	var enemy_group = "enemy" if team == Team.PLAYER else "player"
 	var tiles = get_tree().get_nodes_in_group("tile")
+	
 	for tile in tiles:
 		if tile.is_in_group(enemy_group):
-			var distance = pos.distance_to(tile.global_position)
-			if distance < detection_radius:
+			if pos.distance_to(tile.global_position) < 80.0:
 				enemies.append(tile)
-	
-	if enemies.size() > 1:
-		enemies.sort_custom(func(a, b): 
-			return pos.distance_to(a.global_position) < pos.distance_to(b.global_position)
-		)
 	
 	return enemies
 
@@ -287,56 +399,11 @@ func _on_marker_reached(area):
 	pass
 
 # ============================================================================
-# SYSTÈME D'IMPACT
+# SYSTÈME DE DÉGÂTS
 # ============================================================================
 
-func trigger_impact():
-	if has_impacted:
-		return
-	
-	has_impacted = true
-	
-	print("💥 Impact au marqueur: %s" % target_marker.global_position)
-	
-	var enemies_at_marker = find_enemies_at_marker()
-	
-	if enemies_at_marker.size() > 0:
-		var first_enemy = enemies_at_marker[0]
-		hit_target(first_enemy)
-		
-		if splash_radius > 0.0:
-			apply_splash_damage(target_marker.global_position)
-		
-		spawn_impact_effect(target_marker.global_position)
-	else:
-		spawn_water_splash(target_marker.global_position)
-	
-	cleanup()
-
-func find_enemies_at_marker() -> Array:
-	if not is_instance_valid(target_marker):
-		return []
-	
-	var enemies = []
-	var enemy_group = "enemy" if team == Team.PLAYER else "player"
-	
-	var overlapping = target_marker.get_overlapping_areas()
-	
-	for area in overlapping:
-		if area.is_in_group("tile") and area.is_in_group(enemy_group):
-			enemies.append(area)
-	
-	if enemies.size() > 1:
-		enemies.sort_custom(func(a, b): 
-			return target_marker.global_position.distance_to(a.global_position) < target_marker.global_position.distance_to(b.global_position)
-		)
-	
-	if enemies.size() > 0:
-		print("  ✓ %d tuile(s) trouvée(s), cible: %s" % [enemies.size(), enemies[0].name])
-	
-	return enemies
-
 func hit_target(target):
+	"""Applique les dégâts"""
 	has_hit_targets.append(target)
 	hit_count += 1
 	
@@ -346,10 +413,10 @@ func hit_target(target):
 		target.health -= bullet_damage
 	
 	apply_special_effects(target)
-	
 	print("  💥 Touché: %s (dégâts: %d)" % [target.name, bullet_damage])
 
 func apply_splash_damage(impact_pos: Vector2):
+	"""Dégâts en zone"""
 	var enemy_group = "enemy" if team == Team.PLAYER else "player"
 	var enemies = get_tree().get_nodes_in_group(enemy_group)
 	
@@ -370,6 +437,7 @@ func apply_splash_damage(impact_pos: Vector2):
 			has_hit_targets.append(enemy)
 
 func apply_special_effects(target):
+	"""Effets spéciaux"""
 	if slow_duration > 0.0 and slow_amount > 0.0:
 		if target.has_method("apply_slow"):
 			target.apply_slow(slow_amount, slow_duration)
@@ -383,101 +451,76 @@ func apply_special_effects(target):
 # ============================================================================
 
 func spawn_impact_effect(pos: Vector2):
+	"""Explosion"""
 	if not impact_particles:
 		return
 	
 	var explosion = impact_particles.instantiate()
+	var battlefield = get_battlefield()
 	
-	var tree = get_tree()
-	if not tree:
-		explosion.queue_free()
-		return
-	
-	var parent = get_parent()
-	if parent:
-		parent.add_child(explosion)
-	else:
-		var root = tree.root
-		if root and root.get_child_count() > 0:
-			root.get_child(0).add_child(explosion)
+	if battlefield:
+		battlefield.add_child(explosion)
+		explosion.global_position = pos
+		explosion.emitting = true
+		
+		if team == Team.PLAYER:
+			explosion.modulate = Color(1.0, 0.8, 0.3)
 		else:
-			explosion.queue_free()
-			return
-	
-	explosion.global_position = pos
-	explosion.emitting = true
-	
-	if team == Team.PLAYER:
-		explosion.modulate = Color(1.0, 0.8, 0.3)
-	else:
-		explosion.modulate = Color(0.8, 0.3, 0.3)
+			explosion.modulate = Color(0.8, 0.3, 0.3)
 
 func spawn_water_splash(pos: Vector2):
+	"""Geyser d'eau"""
 	if not water_splash:
 		return
 	
 	var splash = water_splash.instantiate()
+	var battlefield = get_battlefield()
 	
-	var tree = get_tree()
-	if not tree:
-		splash.queue_free()
-		return
-	
-	var parent = get_parent()
-	if parent:
-		parent.add_child(splash)
-	else:
-		var root = tree.root
-		if root and root.get_child_count() > 0:
-			root.get_child(0).add_child(splash)
-		else:
-			splash.queue_free()
-			return
-	
-	splash.global_position = pos
-	
-	if splash is CPUParticles2D:
-		splash.emitting = true
-		splash.amount = 20
-		splash.lifetime = 1.2
-		splash.one_shot = true
-		splash.explosiveness = 0.9
+	if battlefield:
+		battlefield.add_child(splash)
+		splash.global_position = pos
 		
-		splash.direction = Vector2(0, -1)
-		splash.spread = 35.0
-		splash.initial_velocity_min = 150.0
-		splash.initial_velocity_max = 250.0
-		splash.gravity = Vector2(0, 400)
-		
-		splash.modulate = Color(0.4, 0.7, 1.0, 0.7)
-		splash.scale_amount_min = 3.0
-		splash.scale_amount_max = 6.0
-	
-	print("  💧 Geyser d'eau à: %s" % pos)
+		if splash is CPUParticles2D:
+			splash.emitting = true
+			splash.amount = 20
+			splash.lifetime = 1.2
+			splash.one_shot = true
+			splash.explosiveness = 0.9
+			splash.direction = Vector2(0, -1)
+			splash.spread = 35.0
+			splash.initial_velocity_min = 150.0
+			splash.initial_velocity_max = 250.0
+			splash.gravity = Vector2(0, 400)
+			splash.modulate = Color(0.4, 0.7, 1.0, 0.7)
 
 # ============================================================================
 # NETTOYAGE
 # ============================================================================
 
 func cleanup():
+	"""Nettoie tout"""
 	if is_instance_valid(target_marker):
 		target_marker.queue_free()
 	
-	call_deferred("queue_free")
+	if is_instance_valid(trajectory_line):
+		trajectory_line.queue_free()
+	
+	queue_free()
 
 func _on_lifetime_expired():
+	"""Expiration"""
 	if not has_impacted:
-		print("⏱️ Projectile expiré, geyser forcé")
+		print("⏱️ Projectile Verlet expiré")
 		spawn_water_splash(global_position)
-		cleanup()
+	cleanup()
 
 # ============================================================================
 # COMPATIBILITÉ
 # ============================================================================
 
 func set_target(target):
+	"""Pour compatibilité"""
 	if is_instance_valid(target):
 		target_position = target.global_position
-	create_target_marker()
-	calculate_ballistic_trajectory()
-	is_initialized = true
+	setup(team, bullet_damage, target)
+	

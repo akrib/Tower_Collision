@@ -1,7 +1,9 @@
-[gd_scene load_steps=7 format=3 uid="uid://cf3dgcvtpsqha"]
+[gd_scene load_steps=8 format=3 uid="uid://cf3dgcvtpsqha"]
 
 [ext_resource type="Texture2D" uid="uid://dxik6qorojio1" path="res://assets/ui/start.png" id="1_iuonh"]
 [ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="2_iuonh"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_iuonh"]
 
 [sub_resource type="GDScript" id="GDScript_editor"]
 script/source = "extends Button
@@ -39,19 +41,23 @@ scale = Vector2(1.5, 1.5)
 texture = ExtResource("1_iuonh")
 
 [node name="PlayerProfileUI" parent="." instance=ExtResource("2_iuonh")]
+scale = Vector2(1.5, 1.5)
+transform = Transform2D(1.5, 0, 0, 1.5, 0, 0)
 
 [node name="Panel" type="Panel" parent="."]
 offset_left = 128.0
 offset_top = 128.0
 offset_right = 2240.0
 offset_bottom = 1216.0
+theme_override_styles/panel = SubResource("StyleBoxEmpty_iuonh")
 
 [node name="Label" type="Label" parent="Panel"]
 layout_mode = 0
+offset_top = -64.0
 offset_right = 2112.0
-offset_bottom = 448.0
+offset_bottom = 73.0
 theme_override_font_sizes/font_size = 100
-text = "TOWER COLLISION"
+text = "Junk Raft Rumble"
 horizontal_alignment = 1
 vertical_alignment = 1
 

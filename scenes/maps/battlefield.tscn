@@ -1,27 +1,40 @@
-[gd_scene load_steps=8 format=3 uid="uid://crk5j4s32gkyf"]
+[gd_scene load_steps=10 format=3 uid="uid://crk5j4s32gkyf"]
 
 [ext_resource type="Script" uid="uid://cgywdn3a5dmn2" path="res://scripts/maps/battlefield.gd" id="1_qq40l"]
 [ext_resource type="PackedScene" uid="uid://b5u4vqd7i4s8e" path="res://scenes/effects/water.tscn" id="2_2k4hr"]
+[ext_resource type="Texture2D" uid="uid://dg8fa5xg88tu1" path="res://assets/ui/b002.png" id="2_28ap0"]
 [ext_resource type="PackedScene" uid="uid://c5n8m7k4p3w2q" path="res://scenes/maps/player_profile_ui.tscn" id="3_28ap0"]
+[ext_resource type="Texture2D" uid="uid://cgwl8ljsqw5at" path="res://assets/ui/b001.png" id="4_85qv2"]
 [ext_resource type="PackedScene" uid="uid://b5deayjaqhvxf" path="res://scenes/maps/player_island.tscn" id="4_player"]
 [ext_resource type="PackedScene" uid="uid://b13gvfirijxwj" path="res://scenes/maps/enemy_island.tscn" id="5_enemy"]
 
 [sub_resource type="Curve2D" id="Curve2D_p1l3t"]
 _data = {
-"points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 192, 0, 0, 0, 0, 0, 256, 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 384, 0, 0, 0, 0, 0, 448, 0, 0, 0, 0, 0, 512, 0, 0, 0, 0, 0, 576, 0, 0, 0, 0, 0, 640, 0, 0, 0, 0, 0, 704, 0, 0, 0, 0, 0, 768, 0, 0, 0, 0, 0, 832, 0, 0, 0, 0, 0, 896, 0, 0, 0, 0, 0, 960, 0, 0, 0, 0, 0, 1024, 0, 0, 0, 0, 0, 1088, 0, 0, 0, 0, 0, 1152, 0, 0, 0, 0, 0, 1216, 0, 0, 0, 0, 0, 1280, 0, 0, 0, 0, 0, 1344, 0)
+"points": PackedVector2Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 192, 0, 0, 0, 0, 0, 256, 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 384, 0, 0, 0, 0, 0, 448, 0, 0, 0, 0, 0, 512, 0, 0, 0, 0, 0, 576, 0, 0, 0, 0, 0, 640, 0, 0, 0, 0, 0, 704, 0, 0, 0, 0, 0, 768, 0, 0, 0, 0, 0, 832, 0, 0, 0, 0, 0, 896, 0, 0, 0, 0, 0, 960, 0, 0, 0, 0, 0, 1024, 0, 0, 0, 0, 0, 1088, 0, 0, 0, 0, 0, 1152, 0, 0, 0, 0, 0, 1216, 0, 0, 0, 0, 0, 1280, 0, 0, 0, 0, 0, 1344, 0, 0, 0, 0, 0, 1408, 0, 0, 0, 0, 0, 1472, 0, 0, 0, 0, 0, 1536, 0, 0, 0, 0, 0, 1600, 0)
 }
-point_count = 22
+point_count = 26
 
 [sub_resource type="Curve2D" id="Curve2D_ybpgg"]
 _data = {
-"points": PackedVector2Array(0, 0, 0, 0, 1600, 0, 0, 0, 0, 0, 1536, 0, 0, 0, 0, 0, 1472, 0, 0, 0, 0, 0, 1408, 0, 0, 0, 0, 0, 1344, 0, 0, 0, 0, 0, 1280, 0, 0, 0, 0, 0, 1216, 0, 0, 0, 0, 0, 1152, 0, 0, 0, 0, 0, 1088, 0, 0, 0, 0, 0, 1024, 0, 0, 0, 0, 0, 960, 0, 0, 0, 0, 0, 896, 0, 0, 0, 0, 0, 832, 0, 0, 0, 0, 0, 768, 0, 0, 0, 0, 0, 704, 0, 0, 0, 0, 0, 640, 0, 0, 0, 0, 0, 576, 0, 0, 0, 0, 0, 512, 0, 0, 0, 0, 0, 448, 0, 0, 0, 0, 0, 384, 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 256, 0)
+"points": PackedVector2Array(0, 0, 0, 0, 1600, 0, 0, 0, 0, 0, 1536, 0, 0, 0, 0, 0, 1472, 0, 0, 0, 0, 0, 1408, 0, 0, 0, 0, 0, 1344, 0, 0, 0, 0, 0, 1280, 0, 0, 0, 0, 0, 1216, 0, 0, 0, 0, 0, 1152, 0, 0, 0, 0, 0, 1088, 0, 0, 0, 0, 0, 1024, 0, 0, 0, 0, 0, 960, 0, 0, 0, 0, 0, 896, 0, 0, 0, 0, 0, 832, 0, 0, 0, 0, 0, 768, 0, 0, 0, 0, 0, 704, 0, 0, 0, 0, 0, 640, 0, 0, 0, 0, 0, 576, 0, 0, 0, 0, 0, 512, 0, 0, 0, 0, 0, 448, 0, 0, 0, 0, 0, 384, 0, 0, 0, 0, 0, 320, 0, 0, 0, 0, 0, 256, 0, 0, 0, 0, 0, 192, 0, 0, 0, 0, 0, 128, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0, 0)
 }
-point_count = 22
+point_count = 26
 
 [node name="Battlefield" type="Node2D"]
 script = ExtResource("1_qq40l")
 
+[node name="Sprite2D2" type="Sprite2D" parent="."]
+position = Vector2(1189, 659)
+scale = Vector2(1.6, 1.3496094)
+texture = ExtResource("2_28ap0")
+
 [node name="Water" parent="." instance=ExtResource("2_2k4hr")]
+modulate = Color(1, 1, 1, 0.5686275)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(1189, 480)
+scale = Vector2(1.6, 1)
+texture = ExtResource("4_85qv2")
 
 [node name="PlayerProfileUI" parent="." instance=ExtResource("3_28ap0")]
 
