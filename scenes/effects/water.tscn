@@ -2,7 +2,7 @@
 
 [ext_resource type="Shader" uid="uid://eolrdqf7sw4o" path="res://shaders/water.gdshader" id="1_maqa6"]
 [ext_resource type="Texture2D" uid="uid://b1l3cui2smcp8" path="res://assets/texture/tileable_tex.png" id="2_00y3h"]
-[ext_resource type="Texture2D" uid="uid://cgwoi6hoexk6u" path="res://assets/texture/water2.png" id="3_ps5o4"]
+[ext_resource type="Texture2D" uid="uid://utlnvkmt5aqg" path="res://assets/texture/water3.png" id="3_uxm7r"]
 [ext_resource type="Script" uid="uid://qovrftlhtqu3" path="res://scripts/maps/water.gd" id="4_5ra11"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pl7ky"]
@@ -15,8 +15,10 @@ shader_parameter/wave_direction = Vector2(1, 0.3)
 [node name="Water" type="Sprite2D"]
 texture_repeat = 2
 material = SubResource("ShaderMaterial_pl7ky")
-scale = Vector2(0.2, 0.2)
-texture = ExtResource("3_ps5o4")
+position = Vector2(1194, 682)
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_uxm7r")
 region_enabled = true
-region_rect = Rect2(0, 0, 12480, 7020)
+region_rect = Rect2(0, 0, 4776, 2728)
 script = ExtResource("4_5ra11")
+speed_factor = 7.0
