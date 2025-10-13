@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" uid="uid://dmu8d8hfp2u71" path="res://scripts/maps/tile.gd" id="1_jdae2"]
 [ext_resource type="Shader" uid="uid://b24yq4qhjud5h" path="res://shaders/iso_depth_effect.gdshader" id="2_j2wiq"]
-[ext_resource type="Texture2D" uid="uid://cor7c3oqnimku" path="res://assets/texture/iso_tile.png" id="2_jdae2"]
+[ext_resource type="Texture2D" uid="uid://jhfidxf26olx" path="res://assets/tile/tile_002.png" id="3_4l528"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1fp51"]
 shader = ExtResource("2_j2wiq")
 shader_parameter/depth_factor = 0.50000002375
-shader_parameter/near_tint_color = Color(1.1, 1.05, 0.95, 1)
+shader_parameter/near_tint_color = Color(0.92014664, 4.0076366e-06, 9.570476e-07, 1)
 shader_parameter/far_tint_color = Color(0.8, 0.9, 1.1, 1)
 shader_parameter/brightness_range = 0.4
 shader_parameter/contrast_strength = 0.2
@@ -24,7 +24,7 @@ script = ExtResource("1_jdae2")
 
 [node name="CollisionShape2D" type="CollisionPolygon2D" parent="."]
 position = Vector2(2, 1.5)
-polygon = PackedVector2Array(1, -38.5, 63, -0.5, 1, 35.5, -61, -1.5)
+polygon = PackedVector2Array(2, -19.5, 63, -0.5, 1, 14.5, -61, -1.5)
 
 [node name="tile" type="Sprite2D" parent="."]
 light_mask = 7
@@ -32,7 +32,7 @@ visibility_layer = 7
 material = SubResource("ShaderMaterial_1fp51")
 position = Vector2(67, 56)
 scale = Vector2(2, 2)
-texture = ExtResource("2_jdae2")
+texture = ExtResource("3_4l528")
 offset = Vector2(-32, -24)
 
 [connection signal="area_entered" from="." to="." method="_on_area_entered"]

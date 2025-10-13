@@ -12,7 +12,7 @@ extends Node2D
 
 # Constantes de la grille isométrique
 const TILE_WIDTH = 128
-const TILE_HEIGHT = 74
+const TILE_HEIGHT = 34
 const GRID_SIZE = 8
 
 # Grille de tuiles
@@ -92,14 +92,13 @@ func create_iso_grid():
 	print("  ✅ Grille %d×%d créée (%s)" % [GRID_SIZE, GRID_SIZE, group_name])
 
 func setup_tile_shader(tile: Area2D, row: int):
-	"""Configure le shader de profondeur pour la tuile"""
-	# Trouver le sprite de la tuile
+	"""Configure le shader de profondeur pour la tuile avec effet amplifié"""
 	var tile_sprite = tile.get_node_or_null("tile")
 	if not tile_sprite or not tile_sprite is Sprite2D:
 		print("  ⚠️ Sprite 'tile' non trouvé dans ", tile.name)
 		return
 	
-	# DÉSACTIVER le script IsoDepthController pour éviter les conflits
+	# Désactiver le script IsoDepthController
 	if tile_sprite.get_script():
 		tile_sprite.set_script(null)
 	
@@ -116,15 +115,57 @@ func setup_tile_shader(tile: Area2D, row: int):
 		shader_mat.shader = shader
 		tile_sprite.material = shader_mat
 	
-	# Calculer le depth_factor selon la LIGNE (row)
-	# row 0 (premier rang) = loin = depth 0.0
-	# row 7 (dernier rang) = près = depth 1.0
-	var depth = float(row) / float(GRID_SIZE - 1)
+	# ============================================================
+	# CALCUL DU DEPTH FACTOR - COURBE EXPONENTIELLE
+	# ============================================================
+	var linear_depth = float(row) / float(GRID_SIZE - 1)
+	
+	# Courbe quadratique pour amplifier les différences
+	var depth = pow(linear_depth, 2.0)
+	
+	# Alternative : courbe cubique (effet encore plus fort)
+	# var depth = pow(linear_depth, 3.0)
+	
+	# Alternative : plage personnalisée
+	# var depth = lerp(0.2, 1.0, linear_depth)
+	
 	shader_mat.set_shader_parameter("depth_factor", depth)
-	shader_mat.set_shader_parameter("brightness_range", 0.6)  # Plus fort
-	shader_mat.set_shader_parameter("contrast_strength", 0.3)  # Plus de contraste
-	print("  🎨 Shader appliqué à %s (row %d, depth: %.2f)" % [tile.name, row, depth])
-
+	
+	# ============================================================
+	# PARAMÈTRES D'INTENSITÉ - Amplifier l'effet visuel
+	# ============================================================
+	
+	# Luminosité : différence entre loin et près (0.8 = fort)
+	shader_mat.set_shader_parameter("brightness_range", 0.8)
+	
+	# Contraste : accentuer les détails (0.4 = moyen-fort)
+	shader_mat.set_shader_parameter("contrast_strength", 0.4)
+	
+	# Saturation : différence de couleur (0.5 = moyen-fort)
+	shader_mat.set_shader_parameter("saturation_range", 0.5)
+	
+	# Rim Lighting : contours lumineux sur les objets proches (1.5 = visible)
+	shader_mat.set_shader_parameter("rim_intensity", 1.5)
+	
+	# Ambient Occlusion : ombrage dans les creux (0.4 = léger)
+	shader_mat.set_shader_parameter("ao_strength", 0.4)
+	
+	# ============================================================
+	# TEINTES DE COULEUR (optionnel)
+	# ============================================================
+	
+	# Teinte chaude devant (jaune-orangé)
+	shader_mat.set_shader_parameter("near_tint_color", Vector3(1.3, 1.15, 0.85))
+	
+	# Teinte froide derrière (bleu-gris)
+	shader_mat.set_shader_parameter("far_tint_color", Vector3(0.65, 0.75, 1.25))
+	
+	# ============================================================
+	# DEBUG
+	# ============================================================
+	print("  🎨 Shader appliqué à %s (row %d, linear: %.2f, depth: %.2f)" % 
+		[tile.name, row, linear_depth, depth])
+		
 # ============================================================================
 # CHARGEMENT DES TOURS DEPUIS LA SAUVEGARDE
 # ============================================================================
