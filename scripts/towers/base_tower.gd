@@ -231,33 +231,87 @@ func attack():
 			attack_aoe()
 
 func attack_ranged():
-	"""Attaque à distance avec projectile"""
-	if not projectile_scene or not is_instance_valid(current_target):
+	"""Attaque à distance avec projectile - Version call_deferred pour éviter erreurs"""
+	if not projectile_scene:
+		print("❌ PAS DE projectile_scene définie dans %s" % name)
 		return
 	
+	if not is_instance_valid(current_target):
+		print("❌ PAS DE current_target valide dans %s" % name)
+		return
+	
+	print("🎯 %s attaque %s" % [name, current_target.name])
+	
+	# ✅ CRÉER LE PROJECTILE EN DIFFÉRÉ pour éviter l'erreur de flushing
+	call_deferred("_create_projectile_deferred")
+
+func _create_projectile_deferred():
+	"""Crée le projectile de manière différée (évite les erreurs de collision)"""
+	if not is_instance_valid(current_target):
+		print("⚠️ Cible disparue avant création du projectile")
+		return
+	
+	print("🔧 Instanciation du projectile...")
 	var projectile = projectile_scene.instantiate()
+	
+	if not projectile:
+		print("❌ Échec instantiation du projectile!")
+		return
+	
+	print("✅ Projectile instancié: %s" % projectile)
+	
+	# Trouver le parent (battlefield ou scène principale)
+	var battlefield = get_battlefield()
+	if not battlefield:
+		print("❌ Battlefield introuvable!")
+		projectile.queue_free()
+		return
+	
+	print("✅ Battlefield trouvé: %s" % battlefield.name)
+	
+	# Ajouter le projectile à la scène
+	battlefield.add_child(projectile)
+	print("✅ Projectile ajouté à la scène")
+	
+	# Positionner le projectile à l'origine d'attaque
+	if attack_origin:
+		projectile.global_position = attack_origin.global_position
+		print("✅ Projectile positionné à attack_origin: %s" % projectile.global_position)
+	else:
+		projectile.global_position = global_position
+		print("✅ Projectile positionné à global_position: %s" % projectile.global_position)
 	
 	# Configurer le projectile
 	if projectile.has_method("setup"):
+		print("🔧 Appel de projectile.setup()")
 		projectile.setup(team, actual_damage, current_target, projectile_speed)
+		print("✅ Setup terminé")
 	else:
+		print("⚠️ Projectile n'a pas de méthode setup(), configuration basique")
 		# Configuration basique
 		projectile.team = team
 		projectile.bullet_damage = actual_damage
 		projectile.set_target(current_target)
 		if projectile.has("speed"):
 			projectile.speed = projectile_speed
+
+func get_battlefield():
+	"""Trouve la scène battlefield"""
+	var tree = get_tree()
+	if not tree:
+		return null
 	
-	# Ajouter au conteneur
-	if projectile_container:
-		projectile_container.add_child(projectile)
-		if attack_origin:
-			projectile.global_position = attack_origin.global_position
-		else:
-			projectile.global_position = global_position
-	else:
-		get_tree().current_scene.add_child(projectile)
-		projectile.global_position = global_position
+	var root = tree.root
+	if not root:
+		return null
+	
+	# Chercher Battlefield
+	for child in root.get_children():
+		if child.name.to_lower() in ["battlefield", "mainscene", "main"]:
+			return child
+	
+	# Fallback: retourner la première scène valide
+	return root.get_child(0) if root.get_child_count() > 0 else null
 
 func attack_melee():
 	"""Attaque au corps à corps (dégâts directs)"""

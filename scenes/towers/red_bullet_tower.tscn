@@ -8,7 +8,7 @@
 size = Vector2(87, 86)
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_vc54b"]
-radius = 448.0
+radius = 600.0
 
 [sub_resource type="GDScript" id="GDScript_nmdlj"]
 script/source = "extends CollisionShape2D
@@ -128,7 +128,7 @@ shape = SubResource("RectangleShape2D_4agaq")
 
 [node name="Area" type="Panel" parent="."]
 modulate = Color(1, 1, 1, 0.270588)
-custom_minimum_size = Vector2(448, 448)
+custom_minimum_size = Vector2(600, 600)
 offset_left = -448.0
 offset_top = -448.0
 offset_right = 448.0

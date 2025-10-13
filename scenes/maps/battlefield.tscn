@@ -61,6 +61,7 @@ position = Vector2(6.10352e-05, -3.05176e-05)
 
 [node name="UI" type="Control" parent="."]
 visible = false
+top_level = true
 layout_mode = 3
 anchors_preset = 0
 offset_left = 128.0
