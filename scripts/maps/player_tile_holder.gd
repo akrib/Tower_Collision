@@ -20,6 +20,9 @@ var island_tile_map = []
 
 # Référence au système de swipe (si joueur)
 var junk_raft: JunkRaft
+var min_tile_y: float = INF
+var max_tile_y: float = -INF
+
 
 func _ready():
 	print("🏝️ Construction de l'île (team %d)..." % team_id)
@@ -30,40 +33,6 @@ func _ready():
 	if team_id == 1:
 		await get_tree().process_frame
 		setup_junk_raft()
-
-# ============================================================================
-# CONSTRUCTION DE LA GRILLE 8×8
-# ============================================================================
-
-#func create_iso_grid():
-	#"""Crée la grille isométrique de 8×8 tuiles"""
-	#var group_name = "player" if team_id == 1 else "enemy"
-	#
-	#for x in range(GRID_SIZE):
-		#island_tile_map.append([])
-		#for y in range(GRID_SIZE):
-			## Créer une nouvelle tuile
-			#var new_tile = tile_scene.instantiate()
-			#add_child(new_tile)
-#
-			## Position isométrique
-			#var iso_pos = Vector2((x - y) * TILE_WIDTH / 2, (x + y) * TILE_HEIGHT / 2)
-			#new_tile.position = iso_pos
-			#new_tile.name = "tile_%d_%d" % [x, y]
-			#
-			## Configuration de la tuile
-			#new_tile.team = team_id
-			#new_tile.add_to_group(group_name)
-			#new_tile.add_to_group("tile")
-#
-			## Stocker dans la grille
-			#island_tile_map[x].append(new_tile)
-	#
-	#print("  ✅ Grille %d×%d créée (%s)" % [GRID_SIZE, GRID_SIZE, group_name])
-	
-	
-var min_tile_y: float = INF
-var max_tile_y: float = -INF
 
 func create_iso_grid():
 	"""Crée la grille isométrique de 8×8 tuiles"""
@@ -135,7 +104,7 @@ func setup_tile_shader_by_y(tile: Area2D):
 	var tile_y = tile.global_position.y
 	
 	# Calculer le depth linéaire entre min et max
-	var linear_depth = 0.5  # Défaut au milieu
+	var linear_depth = 0.9 # Défaut au milieu
 	if max_tile_y > min_tile_y:
 		linear_depth = (tile_y - min_tile_y) / (max_tile_y - min_tile_y)
 	
@@ -148,8 +117,8 @@ func setup_tile_shader_by_y(tile: Area2D):
 	# PARAMÈTRES D'INTENSITÉ
 	# ============================================================
 	
-	shader_mat.set_shader_parameter("brightness_range", 2.0)
-	shader_mat.set_shader_parameter("contrast_strength", 1.0)
+	shader_mat.set_shader_parameter("brightness_range", 0.005)
+	shader_mat.set_shader_parameter("contrast_strength", 0.5)
 	shader_mat.set_shader_parameter("saturation_range", 1.0)
 	shader_mat.set_shader_parameter("rim_intensity", 2.0)
 	shader_mat.set_shader_parameter("ao_strength", 1.0)
