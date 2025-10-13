@@ -2,40 +2,42 @@ extends CharacterBody2D
 class_name BaseProjectile
 
 # ============================================================================
-# SYSTÈME DE PROJECTILES BALISTIQUES
-# Tous les projectiles suivent des trajectoires en arc (parabole)
-# vers une position FIXE définie au lancement
+# SYSTÈME DE PROJECTILES AVEC TRAJECTOIRES BALISTIQUES CORRIGÉES
 # ============================================================================
 
-# Énumération pour les équipes
 enum Team { NONE, PLAYER, ENEMY }
+enum ProjectileType { DIRECT, HOMING, BALLISTIC, BEAM }
 
-# Configuration de base
+# Configuration
 @export_group("Base Stats")
 @export var team: Team = Team.NONE
+@export var projectile_type: ProjectileType = ProjectileType.BALLISTIC
 @export var bullet_damage: int = 1
+@export var speed: int = 2000
+@export var piercing: int = 0
 
 @export_group("Ballistic Physics")
-@export var initial_speed: float = 800.0  # Vitesse initiale
-@export var arc_height: float = 200.0  # Hauteur de l'arc
-@export var gravity: float = 1500.0  # Force de gravité
-@export var lifetime: float = 5.0  # Durée de vie max
+@export var initial_speed: float = 800.0
+@export var arc_height: float = 200.0
+@export var gravity: float = 1500.0
+@export var lifetime: float = 5.0
 
 @export_group("Special Effects")
-@export var splash_radius: float = 0.0  # Rayon d'explosion
+@export var splash_radius: float = 0.0
 @export var slow_duration: float = 0.0
 @export var slow_amount: float = 0.0
 @export var poison_damage: int = 0
 @export var poison_duration: float = 0.0
-@export var piercing: int = 0  # Nombre de cibles traversées
 
-# Position cible FIXE (définie au lancement)
+# Marqueur de cible
+var target_marker: Area2D = null
 var target_position: Vector2 = Vector2.ZERO
 
-# Variables de trajectoire balistique
+# Variables de trajectoire (TOUT EN GLOBAL)
 var start_position: Vector2 = Vector2.ZERO
 var velocity_2d: Vector2 = Vector2.ZERO
 var vertical_velocity: float = 0.0
+var vertical_offset: float = 0.0  # ✅ NOUVEAU : Offset Y simulé
 var travel_time: float = 0.0
 var max_travel_time: float = 2.0
 
@@ -44,14 +46,14 @@ var time_alive: float = 0.0
 var has_hit_targets = []
 var hit_count: int = 0
 var is_initialized: bool = false
+var has_impacted: bool = false
 
-# Effets visuels
+# Effets
 @onready var sprite = $TowerDefenseTile251 if has_node("TowerDefenseTile251") else null
 @onready var impact_particles = preload("res://scenes/effects/explode.tscn")
-@onready var water_splash = preload("res://scenes/effects/smoke.tscn")  # On réutilise smoke pour l'effet geyser
+@onready var water_splash = preload("res://scenes/effects/smoke.tscn")
 
 func _ready():
-	# Timer de sécurité
 	var timer = get_tree().create_timer(lifetime)
 	timer.timeout.connect(_on_lifetime_expired)
 
@@ -65,183 +67,289 @@ func _physics_process(delta):
 	# Mouvement balistique
 	move_ballistic(delta)
 	
-	# Vérifier si on a atteint la destination
-	check_arrival()
+	# Vérifier si on a atteint le marqueur
+	check_marker_collision()
 
 # ============================================================================
-# CONFIGURATION DU PROJECTILE
+# CONFIGURATION & CRÉATION DU MARQUEUR
 # ============================================================================
 
 func setup(p_team: Team, p_damage: int, p_target, p_speed: float = 800.0):
-	"""Configure le projectile depuis la tour"""
 	team = p_team
 	bullet_damage = p_damage
 	initial_speed = p_speed
+	start_position = global_position  # ✅ GLOBAL
 	
-	# Enregistrer la position de départ
-	start_position = global_position
-	
-	# Déterminer la position cible FIXE
+	# Déterminer la position cible
 	if is_instance_valid(p_target):
-		# Si c'est un objet, prendre sa position ACTUELLE
-		target_position = p_target.global_position
+		target_position = p_target.global_position  # ✅ GLOBAL
 	elif p_target is Vector2:
-		# Si c'est déjà une position
 		target_position = p_target
 	else:
-		# Fallback: projeter devant
-		target_position = global_position + Vector2(400, 0)
+		var forward = Vector2(1, 0) if team == Team.PLAYER else Vector2(-1, 0)
+		target_position = global_position + forward * 400.0
 	
-	# Calculer la trajectoire balistique
+	# Calculer la trajectoire
 	calculate_ballistic_trajectory()
 	
 	is_initialized = true
 	
-	print("🎯 Projectile lancé vers: %s (distance: %.0f)" % [target_position, start_position.distance_to(target_position)])
+	# Créer le marqueur
+	call_deferred("create_target_marker")
+	
+	var dir = "→" if (target_position.x > start_position.x) else "←"
+	print("🎯 %s tire %s vers %s (dist: %.0f)" % [
+		"JOUEUR" if team == Team.PLAYER else "ENNEMI",
+		dir,
+		target_position,
+		start_position.distance_to(target_position)
+	])
+
+func create_target_marker():
+	target_marker = Area2D.new()
+	target_marker.name = "TargetMarker"
+	target_marker.global_position = target_position
+	
+	var collision = CollisionShape2D.new()
+	var circle = CircleShape2D.new()
+	circle.radius = 60.0
+	collision.shape = circle
+	target_marker.add_child(collision)
+	
+	# Ajouter à la scène
+	var tree = get_tree()
+	if not tree:
+		target_marker.queue_free()
+		return
+	
+	var scene_root = tree.root
+	if not scene_root:
+		target_marker.queue_free()
+		return
+	
+	var main_scene = null
+	for child in scene_root.get_children():
+		if child.name in ["Battlefield", "battlefield", "MainScene", "main"]:
+			main_scene = child
+			break
+	
+	if not main_scene:
+		for child in scene_root.get_children():
+			if not child is Window:
+				main_scene = child
+				break
+	
+	if main_scene:
+		main_scene.add_child(target_marker)
+	else:
+		scene_root.add_child(target_marker)
+	
+	target_marker.area_entered.connect(_on_marker_reached)
+	
+	# Debug visuel
+	if OS.is_debug_build():
+		var debug_circle = Polygon2D.new()
+		var points = []
+		for i in range(32):
+			var angle = i * PI * 2.0 / 32
+			points.append(Vector2(cos(angle), sin(angle)) * 60.0)
+		debug_circle.polygon = PackedVector2Array(points)
+		debug_circle.color = Color(1, 0, 0, 0.3)
+		target_marker.add_child(debug_circle)
+	
+	print("  📍 Marqueur créé à: %s" % target_position)
 
 func calculate_ballistic_trajectory():
-	"""Calcule la vélocité initiale pour atteindre target_position avec un arc"""
 	var distance_vector = target_position - start_position
 	var horizontal_distance = distance_vector.length()
 	
-	# Éviter la division par zéro
 	if horizontal_distance < 1.0:
-		target_position = start_position + Vector2(100, 0)
+		var forward = Vector2(1, 0) if team == Team.PLAYER else Vector2(-1, 0)
+		target_position = start_position + forward * 50.0
 		distance_vector = target_position - start_position
 		horizontal_distance = distance_vector.length()
 	
-	# Direction horizontale normalisée
 	var direction = distance_vector.normalized()
 	
-	# Calculer le temps de vol basé sur la distance
-	# Plus c'est loin, plus le temps de vol est long
-	max_travel_time = sqrt(horizontal_distance / 200.0)  # Formule empirique
-	max_travel_time = clamp(max_travel_time, 0.3, 2.0)
+	# Arc adaptatif
+	var adaptive_arc = arc_height
+	if horizontal_distance < 200.0:
+		adaptive_arc = arc_height * 0.2 * (horizontal_distance / 200.0)
+	elif horizontal_distance < 400.0:
+		adaptive_arc = arc_height * 0.5
 	
-	# Calculer la vélocité horizontale nécessaire
+	# Temps de vol adaptatif
+	if horizontal_distance < 100.0:
+		max_travel_time = 0.2
+	elif horizontal_distance < 300.0:
+		max_travel_time = 0.4 + (horizontal_distance - 100.0) / 500.0
+	else:
+		max_travel_time = sqrt(horizontal_distance / 200.0)
+		max_travel_time = clamp(max_travel_time, 0.5, 2.0)
+	
+	# ✅ Vélocité horizontale EN GLOBAL
 	velocity_2d = direction * (horizontal_distance / max_travel_time)
 	
-	# Calculer la vélocité verticale pour créer un arc parabolique
-	# On veut que le projectile atteigne arc_height à mi-chemin
-	# Formule: v0 = (h + 0.5*g*t²) / t où t = max_travel_time/2
+	# ✅ Vélocité verticale pour l'arc
 	var half_time = max_travel_time / 2.0
-	vertical_velocity = -(arc_height + 0.5 * gravity * half_time * half_time) / half_time
+	vertical_velocity = -(adaptive_arc + 0.5 * gravity * half_time * half_time) / half_time
 	
-	print("  📐 Trajectoire: distance=%.0f, temps=%.1fs, v_horiz=%.0f, v_vert=%.0f" % [horizontal_distance, max_travel_time, velocity_2d.length(), vertical_velocity])
+	print("  📐 Arc: %.0f, Temps: %.2fs, Vélocité: %s" % [adaptive_arc, max_travel_time, velocity_2d])
 
 # ============================================================================
-# MOUVEMENT BALISTIQUE
+# MOUVEMENT BALISTIQUE CORRIGÉ
 # ============================================================================
 
 func move_ballistic(delta):
-	"""Mouvement en parabole avec gravité"""
-	# Mouvement horizontal (constant)
+	"""Mouvement en parabole - TOUT EN GLOBAL"""
+	
+	# ✅ 1. Mouvement horizontal (en global via velocity)
 	velocity = velocity_2d
 	
-	# Mouvement vertical (avec gravité)
+	# ✅ 2. Mouvement vertical simulé (offset Y)
 	vertical_velocity += gravity * delta
+	vertical_offset += vertical_velocity * delta
 	
-	# Simuler le mouvement vertical en ajustant la position Y
-	# (Godot n'a pas de vrai axe Z, on simule)
-	var vertical_offset = vertical_velocity * delta
-	position.y += vertical_offset
-	
-	# Rotation du sprite selon la trajectoire
-	if sprite:
-		var angle = atan2(vertical_velocity, velocity_2d.length())
-		sprite.rotation = angle
-	
-	# Déplacer horizontalement
+	# ✅ 3. Déplacement horizontal avec move_and_slide
 	move_and_slide()
-
-func check_arrival():
-	"""Vérifie si le projectile a atteint sa destination"""
-	var distance_to_target = global_position.distance_to(target_position)
 	
-	# Si on est proche de la cible OU si on a dépassé le temps de vol
-	if distance_to_target < 50.0 or travel_time >= max_travel_time * 1.2:
-		impact_at_position(global_position)
+	# ✅ 4. Appliquer l'offset vertical APRÈS le déplacement horizontal
+	# On modifie global_position.y directement pour éviter les problèmes de local
+	var new_pos = global_position
+	new_pos.y = start_position.y + vertical_offset + (travel_time / max_travel_time) * (target_position.y - start_position.y)
+	global_position = new_pos
+	
+	# ✅ 5. Rotation du sprite selon la vélocité RÉELLE
+	if sprite:
+		var total_velocity = Vector2(velocity_2d.x, vertical_velocity)
+		sprite.rotation = total_velocity.angle()
+
+# ============================================================================
+# DÉTECTION DU MARQUEUR
+# ============================================================================
+
+func check_marker_collision():
+	if has_impacted:
+		return
+	
+	if not is_instance_valid(target_marker):
+		if travel_time >= max_travel_time * 1.5:
+			trigger_impact_without_marker()
+		return
+	
+	var distance = global_position.distance_to(target_marker.global_position)
+	
+	if distance < 70.0:
+		trigger_impact()
+	
+	if travel_time >= max_travel_time * 1.2:
+		trigger_impact()
+
+func trigger_impact_without_marker():
+	if has_impacted:
+		return
+	
+	has_impacted = true
+	print("💥 Impact d'urgence à: %s" % target_position)
+	
+	var enemies = find_enemies_at_position(target_position)
+	
+	if enemies.size() > 0:
+		hit_target(enemies[0])
+		if splash_radius > 0.0:
+			apply_splash_damage(target_position)
+		spawn_impact_effect(target_position)
+	else:
+		spawn_water_splash(target_position)
+	
+	cleanup()
+
+func find_enemies_at_position(pos: Vector2) -> Array:
+	var enemies = []
+	var enemy_group = "enemy" if team == Team.PLAYER else "player"
+	var detection_radius = 60.0
+	
+	var tiles = get_tree().get_nodes_in_group("tile")
+	for tile in tiles:
+		if tile.is_in_group(enemy_group):
+			var distance = pos.distance_to(tile.global_position)
+			if distance < detection_radius:
+				enemies.append(tile)
+	
+	if enemies.size() > 1:
+		enemies.sort_custom(func(a, b): 
+			return pos.distance_to(a.global_position) < pos.distance_to(b.global_position)
+		)
+	
+	return enemies
+
+func _on_marker_reached(area):
+	pass
 
 # ============================================================================
 # SYSTÈME D'IMPACT
 # ============================================================================
 
-func impact_at_position(impact_pos: Vector2):
-	"""Gère l'impact du projectile à la position donnée"""
-	print("💥 Impact à: %s" % impact_pos)
+func trigger_impact():
+	if has_impacted:
+		return
 	
-	# Chercher des cibles à l'impact
-	var targets_hit = find_targets_at_position(impact_pos)
+	has_impacted = true
 	
-	if targets_hit.size() > 0:
-		# Toucher les cibles trouvées
-		for target in targets_hit:
-			if target not in has_hit_targets:
-				hit_target(target)
+	print("💥 Impact au marqueur: %s" % target_marker.global_position)
+	
+	var enemies_at_marker = find_enemies_at_marker()
+	
+	if enemies_at_marker.size() > 0:
+		var first_enemy = enemies_at_marker[0]
+		hit_target(first_enemy)
 		
-		# Effet d'explosion si AOE
 		if splash_radius > 0.0:
-			apply_splash_damage(impact_pos)
+			apply_splash_damage(target_marker.global_position)
 		
-		# Effet visuel d'impact
-		spawn_impact_effect(impact_pos)
+		spawn_impact_effect(target_marker.global_position)
 	else:
-		# Aucune cible touchée = geyser d'eau
-		spawn_water_splash(impact_pos)
+		spawn_water_splash(target_marker.global_position)
 	
-	# Détruire le projectile
-	queue_free()
+	cleanup()
 
-func find_targets_at_position(pos: Vector2) -> Array:
-	"""Trouve les cibles (tuiles/tours) à proximité de la position"""
-	var targets = []
-	var detection_radius = 30.0  # Rayon de détection
+func find_enemies_at_marker() -> Array:
+	if not is_instance_valid(target_marker):
+		return []
 	
-	# Déterminer le groupe ennemi
+	var enemies = []
 	var enemy_group = "enemy" if team == Team.PLAYER else "player"
 	
-	# Chercher les tuiles ennemies
-	var tiles = get_tree().get_nodes_in_group("tile")
-	var enemies = get_tree().get_nodes_in_group(enemy_group)
+	var overlapping = target_marker.get_overlapping_areas()
 	
-	for tile in tiles:
-		if tile in enemies:
-			var distance = pos.distance_to(tile.global_position)
-			if distance < detection_radius:
-				targets.append(tile)
+	for area in overlapping:
+		if area.is_in_group("tile") and area.is_in_group(enemy_group):
+			enemies.append(area)
 	
-	# Chercher les tours ennemies
-	var towers = get_tree().get_nodes_in_group("tower")
-	for tower in towers:
-		if tower in enemies:
-			var distance = pos.distance_to(tower.global_position)
-			if distance < detection_radius:
-				targets.append(tower)
+	if enemies.size() > 1:
+		enemies.sort_custom(func(a, b): 
+			return target_marker.global_position.distance_to(a.global_position) < target_marker.global_position.distance_to(b.global_position)
+		)
 	
-	return targets
+	if enemies.size() > 0:
+		print("  ✓ %d tuile(s) trouvée(s), cible: %s" % [enemies.size(), enemies[0].name])
+	
+	return enemies
 
 func hit_target(target):
-	"""Applique les dégâts et effets à une cible"""
 	has_hit_targets.append(target)
 	hit_count += 1
 	
-	# Appliquer les dégâts
-	apply_damage(target)
-	
-	# Effets spéciaux
-	apply_special_effects(target)
-	
-	print("  ✓ Touché: %s (dégâts: %d)" % [target.name if target.has_method("get_name") else "Target", bullet_damage])
-
-func apply_damage(target):
-	"""Applique les dégâts à la cible"""
 	if target.has_method("take_damage"):
 		target.take_damage(bullet_damage)
 	elif "health" in target:
 		target.health -= bullet_damage
+	
+	apply_special_effects(target)
+	
+	print("  💥 Touché: %s (dégâts: %d)" % [target.name, bullet_damage])
 
-func apply_splash_damage(impact_position: Vector2):
-	"""Applique des dégâts en zone"""
+func apply_splash_damage(impact_pos: Vector2):
 	var enemy_group = "enemy" if team == Team.PLAYER else "player"
 	var enemies = get_tree().get_nodes_in_group(enemy_group)
 	
@@ -249,29 +357,23 @@ func apply_splash_damage(impact_position: Vector2):
 		if enemy in has_hit_targets:
 			continue
 		
-		var distance = impact_position.distance_to(enemy.global_position)
+		var distance = impact_pos.distance_to(enemy.global_position)
 		if distance <= splash_radius:
-			# Dégâts réduits avec la distance
-			var damage_multiplier = 1.0 - (distance / splash_radius) * 0.5
-			var splash_damage = int(bullet_damage * damage_multiplier)
+			var dmg_mult = 1.0 - (distance / splash_radius) * 0.5
+			var splash_dmg = int(bullet_damage * dmg_mult)
 			
 			if enemy.has_method("take_damage"):
-				enemy.take_damage(splash_damage)
+				enemy.take_damage(splash_dmg)
 			elif "health" in enemy:
-				enemy.health -= splash_damage
+				enemy.health -= splash_dmg
 			
 			has_hit_targets.append(enemy)
-			
-			print("  💨 Splash: %s (dégâts: %d)" % [enemy.name if enemy.has_method("get_name") else "Target", splash_damage])
 
 func apply_special_effects(target):
-	"""Applique les effets spéciaux (ralentissement, poison, etc.)"""
-	# Ralentissement
 	if slow_duration > 0.0 and slow_amount > 0.0:
 		if target.has_method("apply_slow"):
 			target.apply_slow(slow_amount, slow_duration)
 	
-	# Poison
 	if poison_damage > 0 and poison_duration > 0.0:
 		if target.has_method("apply_poison"):
 			target.apply_poison(poison_damage, poison_duration)
@@ -281,90 +383,101 @@ func apply_special_effects(target):
 # ============================================================================
 
 func spawn_impact_effect(pos: Vector2):
-	"""Crée un effet d'explosion"""
-	if impact_particles:
-		var explosion = impact_particles.instantiate()
-		get_tree().current_scene.add_child(explosion)
-		explosion.global_position = pos
-		explosion.emitting = true
-		
-		# Ajuster la couleur selon l'équipe
-		if team == Team.PLAYER:
-			explosion.modulate = Color(1.0, 0.8, 0.3)  # Orange
+	if not impact_particles:
+		return
+	
+	var explosion = impact_particles.instantiate()
+	
+	var tree = get_tree()
+	if not tree:
+		explosion.queue_free()
+		return
+	
+	var parent = get_parent()
+	if parent:
+		parent.add_child(explosion)
+	else:
+		var root = tree.root
+		if root and root.get_child_count() > 0:
+			root.get_child(0).add_child(explosion)
 		else:
-			explosion.modulate = Color(0.8, 0.3, 0.3)  # Rouge
+			explosion.queue_free()
+			return
+	
+	explosion.global_position = pos
+	explosion.emitting = true
+	
+	if team == Team.PLAYER:
+		explosion.modulate = Color(1.0, 0.8, 0.3)
+	else:
+		explosion.modulate = Color(0.8, 0.3, 0.3)
 
 func spawn_water_splash(pos: Vector2):
-	"""Crée un effet de geyser d'eau (splash dans l'eau)"""
-	if water_splash:
-		var splash = water_splash.instantiate()
-		get_tree().current_scene.add_child(splash)
-		splash.global_position = pos
+	if not water_splash:
+		return
+	
+	var splash = water_splash.instantiate()
+	
+	var tree = get_tree()
+	if not tree:
+		splash.queue_free()
+		return
+	
+	var parent = get_parent()
+	if parent:
+		parent.add_child(splash)
+	else:
+		var root = tree.root
+		if root and root.get_child_count() > 0:
+			root.get_child(0).add_child(splash)
+		else:
+			splash.queue_free()
+			return
+	
+	splash.global_position = pos
+	
+	if splash is CPUParticles2D:
+		splash.emitting = true
+		splash.amount = 20
+		splash.lifetime = 1.2
+		splash.one_shot = true
+		splash.explosiveness = 0.9
 		
-		# Configuration pour effet de geyser
-		if splash is CPUParticles2D:
-			splash.emitting = true
-			splash.amount = 15
-			splash.lifetime = 1.0
-			splash.one_shot = true
-			splash.explosiveness = 0.8
-			
-			# Direction vers le haut (geyser)
-			splash.direction = Vector2(0, -1)
-			splash.spread = 45.0
-			
-			# Vitesse
-			splash.initial_velocity_min = 100.0
-			splash.initial_velocity_max = 200.0
-			
-			# Gravité vers le bas
-			splash.gravity = Vector2(0, 300)
-			
-			# Couleur bleue pour l'eau
-			splash.modulate = Color(0.3, 0.6, 1.0, 0.6)
-			
-			# Taille des particules
-			splash.scale_amount_min = 2.0
-			splash.scale_amount_max = 4.0
+		splash.direction = Vector2(0, -1)
+		splash.spread = 35.0
+		splash.initial_velocity_min = 150.0
+		splash.initial_velocity_max = 250.0
+		splash.gravity = Vector2(0, 400)
+		
+		splash.modulate = Color(0.4, 0.7, 1.0, 0.7)
+		splash.scale_amount_min = 3.0
+		splash.scale_amount_max = 6.0
 	
 	print("  💧 Geyser d'eau à: %s" % pos)
 
+# ============================================================================
+# NETTOYAGE
+# ============================================================================
+
+func cleanup():
+	if is_instance_valid(target_marker):
+		target_marker.queue_free()
+	
+	call_deferred("queue_free")
+
 func _on_lifetime_expired():
-	"""Détruit le projectile après sa durée de vie"""
-	print("⏱️ Projectile expiré")
-	spawn_water_splash(global_position)
-	queue_free()
+	if not has_impacted:
+		print("⏱️ Projectile expiré, geyser forcé")
+		spawn_water_splash(global_position)
+		cleanup()
 
 # ============================================================================
-# COLLISIONS (DÉTECTION ANTICIPÉE)
-# ============================================================================
-
-func _on_area_2d_area_entered(area):
-	"""Collision avec une area (tuiles) - détection anticipée"""
-	# On vérifie si c'est une cible valide
-	var enemy_group = "enemy" if team == Team.PLAYER else "player"
-	
-	if area.is_in_group("tile") and area.is_in_group(enemy_group):
-		# Impact anticipé sur une tuile
-		if area not in has_hit_targets:
-			impact_at_position(area.global_position)
-
-func _on_area_2d_body_entered(body):
-	"""Collision avec un body (tours) - détection anticipée"""
-	var enemy_group = "enemy" if team == Team.PLAYER else "player"
-	
-	if body.is_in_group("tower") and body.is_in_group(enemy_group):
-		# Impact anticipé sur une tour
-		if body not in has_hit_targets:
-			impact_at_position(body.global_position)
-
-# ============================================================================
-# MÉTHODE DE COMPATIBILITÉ (ANCIEN SYSTÈME)
+# COMPATIBILITÉ
 # ============================================================================
 
 func set_target(target):
-	"""Pour compatibilité avec l'ancien système"""
 	if is_instance_valid(target):
 		target_position = target.global_position
+	create_target_marker()
 	calculate_ballistic_trajectory()
 	is_initialized = true
