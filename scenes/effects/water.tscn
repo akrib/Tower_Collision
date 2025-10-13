@@ -1,16 +1,16 @@
-[gd_scene load_steps=6 format=3 uid="uid://b5u4vqd7i4s8e"]
+[gd_scene load_steps=7 format=3 uid="uid://b5u4vqd7i4s8e"]
 
 [ext_resource type="Shader" uid="uid://eolrdqf7sw4o" path="res://shaders/water.gdshader" id="1_maqa6"]
 [ext_resource type="Texture2D" uid="uid://b1l3cui2smcp8" path="res://assets/texture/tileable_tex.png" id="2_00y3h"]
 [ext_resource type="Texture2D" uid="uid://utlnvkmt5aqg" path="res://assets/texture/water3.png" id="3_uxm7r"]
 [ext_resource type="Script" uid="uid://qovrftlhtqu3" path="res://scripts/maps/water.gd" id="4_5ra11"]
+[ext_resource type="Texture2D" uid="uid://dm4gy5ememk65" path="res://assets/back.png" id="5_gmu72"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_pl7ky"]
 shader = ExtResource("1_maqa6")
 shader_parameter/noise_tex = ExtResource("2_00y3h")
 shader_parameter/wave_speed = 1.0
 shader_parameter/wave_strength = 0.05
-shader_parameter/wave_direction = Vector2(1, 0.3)
 
 [node name="Water" type="Sprite2D"]
 texture_repeat = 2
@@ -22,3 +22,8 @@ region_enabled = true
 region_rect = Rect2(0, 0, 4776, 2728)
 script = ExtResource("4_5ra11")
 speed_factor = 7.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(12, -919)
+scale = Vector2(3.1119792, 1.6972656)
+texture = ExtResource("5_gmu72")

@@ -22,6 +22,11 @@ var player_raft: JunkRaft
 
 # État du combat
 var is_game_over = false
+var speed_boost_active = false  # Pour l'accélération en cas de stagnation
+const STAGNATION_TIME = 10.0  # Temps en secondes sans destruction de tuile avant accélération
+var time_since_last_tile_destroyed = 0.0  # Chronomètre
+var last_tile_count_player = 64  # Nombre de tuiles au dernier check
+var last_tile_count_enemy = 64
 
 func _ready():
 	# Configurer l'UI pour qu'elle continue de fonctionner en pause
@@ -69,18 +74,66 @@ func _process(delta):
 	if is_game_over:
 		return
 	
+	# NOUVEAU : Vérifier si le combat stagne
+	check_stagnation(delta)
+	
 	# Déplacer l'île du joueur selon la vitesse du swipe
 	if player_raft:
-		player_path_follow.progress += player_raft.current_speed * delta
+		var player_speed = player_raft.current_speed
+		# Appliquer le boost de vitesse si actif
+		if speed_boost_active:
+			player_speed *= 3.0  # Triple la vitesse
+		player_path_follow.progress += player_speed * delta
 	
-	# L'ennemi garde sa vitesse fixe
-	enemy_path_follow.progress += 75 * delta
+	# L'ennemi garde sa vitesse fixe (ou accélère aussi si boost actif)
+	var enemy_speed = 75.0
+	if speed_boost_active:
+		enemy_speed *= 3.0  # Triple la vitesse
+	
+	enemy_path_follow.progress += enemy_speed * delta
 	
 	# Vérifier les conditions de victoire/défaite
 	check_victory_conditions()
 	
 	# Détecter la collision entre les îles
 	check_island_collision()
+
+func check_stagnation(delta: float):
+	"""Vérifie si le combat stagne (aucune tuile détruite depuis X secondes)"""
+	# Compter les tuiles actuelles
+	var current_player_tiles = get_alive_tiles_count("player")
+	var current_enemy_tiles = get_alive_tiles_count("enemy")
+	
+	# Vérifier si une tuile a été détruite depuis le dernier check
+	var tile_destroyed = (current_player_tiles < last_tile_count_player) or (current_enemy_tiles < last_tile_count_enemy)
+	
+	if tile_destroyed:
+		# Réinitialiser le chronomètre
+		time_since_last_tile_destroyed = 0.0
+		last_tile_count_player = current_player_tiles
+		last_tile_count_enemy = current_enemy_tiles
+		
+		# Désactiver le boost si une tuile a été détruite
+		if speed_boost_active:
+			speed_boost_active = false
+			show_temporary_message("⏸️ Vitesse normale", Color.GREEN)
+			print("⏸️ Boost désactivé - Une tuile a été détruite")
+	else:
+		# Incrémenter le chronomètre
+		time_since_last_tile_destroyed += delta
+		
+		# Activer l'accélération si le seuil est atteint
+		if time_since_last_tile_destroyed >= STAGNATION_TIME and not speed_boost_active:
+			speed_boost_active = true
+			show_temporary_message("⚡ ACCÉLÉRATION - COMBAT BLOQUÉ!", Color.ORANGE_RED)
+			print("⚡ Combat stagne depuis %.1f secondes - Accélération activée" % time_since_last_tile_destroyed)
+
+func get_alive_tiles_count(group_name: String) -> int:
+	"""Compte le nombre de tuiles vivantes pour un groupe"""
+	var tiles = get_tree().get_nodes_in_group(group_name)
+	# Filtrer pour ne compter que les tuiles (pas les tours)
+	tiles = tiles.filter(func(node): return node.is_in_group("tile"))
+	return tiles.size()
 
 func check_victory_conditions():
 	"""Vérifie si la bataille est terminée"""
@@ -254,4 +307,3 @@ func _input(event):
 	if event.is_action_pressed("ui_accept") and OS.is_debug_build():
 		print("🔧 DEBUG: Victoire forcée")
 		end_game("player")
-		

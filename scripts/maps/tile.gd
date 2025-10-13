@@ -7,6 +7,7 @@ var is_stunned = false
 var base_speed = 75.0  # Pour plus tard si les tuiles bougent
 
 @onready var smoke_particles = preload("res://scenes/effects/smoke.tscn")
+@onready var tile_map = $TileMap
 
 # Système d'effets de statut
 var status_effects: StatusEffects
@@ -16,11 +17,78 @@ func _ready():
 	status_effects = StatusEffects.new()
 	add_child(status_effects)
 	
+	# Afficher une tuile aléatoire du TileMap
+	display_random_tile()
+	
 	var tile_sprite = get_node_or_null("tile")
 	if tile_sprite and tile_sprite is IsoDepthSprite:
 		tile_sprite.far_y = 200.0
 		tile_sprite.near_y = 1000.0
 		tile_sprite.update_depth()
+
+func display_random_tile():
+	"""Affiche une tuile aléatoire du TileMap"""
+	if not tile_map:
+		push_warning("⚠️ TileMap non trouvé dans la tuile")
+		return
+	
+	# Récupérer le TileSet
+	var tile_set = tile_map.tile_set
+	if not tile_set:
+		push_warning("⚠️ TileSet non configuré")
+		return
+	
+	# Récupérer la source (atlas) - normalement source 0
+	var source_id = 0
+	var source = tile_set.get_source(source_id)
+	
+	if not source or not source is TileSetAtlasSource:
+		push_warning("⚠️ Source d'atlas introuvable")
+		return
+	
+	var atlas_source = source as TileSetAtlasSource
+	
+	# Récupérer toutes les coordonnées de tuiles disponibles
+	var available_tiles = []
+	var tiles_count = atlas_source.get_tiles_count()
+	
+	for i in range(tiles_count):
+		var tile_coords = atlas_source.get_tile_id(i)
+		available_tiles.append(tile_coords)
+	
+	if available_tiles.size() == 0:
+		push_warning("⚠️ Aucune tuile disponible dans l'atlas")
+		return
+	
+	# Choisir une tuile aléatoire
+	var random_tile = available_tiles[randi() % available_tiles.size()]
+	
+	# OPTION 1 : Utiliser le sprite existant avec une région de la texture
+	var tile_sprite = get_node_or_null("tile")
+	if tile_sprite and tile_sprite is Sprite2D:
+		# Récupérer la texture de l'atlas
+		var atlas_texture = atlas_source.texture
+		
+		# Calculer la région de la tuile dans l'atlas
+		var tile_size = atlas_source.texture_region_size
+		var margins = atlas_source.margins
+		var separation = atlas_source.separation
+		
+		# Position de la tuile dans l'atlas
+		var atlas_x = margins.x + random_tile.x * (tile_size.x + separation.x)
+		var atlas_y = margins.y + random_tile.y * (tile_size.y + separation.y)
+		
+		# Créer une AtlasTexture pour afficher juste cette région
+		var atlas_tex = AtlasTexture.new()
+		atlas_tex.atlas = atlas_texture
+		atlas_tex.region = Rect2(atlas_x, atlas_y, tile_size.x, tile_size.y)
+		
+		# Appliquer au sprite
+		tile_sprite.texture = atlas_tex
+		tile_sprite.visible = true
+	
+	# Masquer le TileMap (on n'en a plus besoin)
+	tile_map.visible = false
 
 func _process(_delta):
 	if health < 1:
